@@ -1,0 +1,81 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@eslint-react/eslint-plugin",
+    "@typescript-eslint",
+    "react-native",
+    "prefer-arrow-functions",
+    "prettier",
+    "react-compiler",
+    "react-hooks"
+  ],
+  "extends": [
+    "universe",
+    "universe/native",
+    "universe/shared/typescript-analysis",
+    "plugin:prettier/recommended"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.d.ts"
+      ],
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      },
+      "ecmaFeatures": {
+        "jsx": true
+      }
+    }
+  ],
+  "rules": {
+    "@eslint-react/hooks-extra/no-direct-set-state-in-use-effect": "error",
+    "@typescript-eslint/member-ordering": "warn",
+    "prettier/prettier": 1,
+    "react-compiler/react-compiler": "error",
+    "react-native/no-unused-styles": 1,
+    "react-native/no-inline-styles": 2,
+    "react-native/no-raw-text": 2,
+    "react-native/no-single-element-style-arrays": 2,
+    "no-console": "error",
+    "prefer-arrow-functions/prefer-arrow-functions": [
+      "warn",
+      {
+        "disallowPrototype": true,
+        "singleReturnOnly": false,
+        "classPropertiesAllowed": false
+      }
+    ],
+    "react/function-component-definition": [
+      2,
+      {
+        "namedComponents": "arrow-function",
+        "unnamedComponents": "arrow-function"
+      }
+    ],
+    "sort-imports": [
+      "error",
+      {
+        "ignoreCase": true,
+        "ignoreDeclarationSort": true,
+        "ignoreMemberSort": true
+      }
+    ],
+    "import/order": [
+      1,
+      {
+        "groups": [
+          "external",
+          "builtin",
+          "internal",
+          "sibling",
+          "parent",
+          "index"
+        ]
+      }
+    ]
+  }
+}

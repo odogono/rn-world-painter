@@ -1,0 +1,6 @@
+node_modules
+**/*.js
+coverage
+**/*.hbs
+
+.env.local
