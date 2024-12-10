@@ -1,90 +1,17 @@
-import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback } from 'react';
 
-import {
-  Canvas,
-  Circle,
-  Path,
-  Rect,
-  SkPoint,
-  Skia,
-  useCanvasRef
-} from '@shopify/react-native-skia';
+import { SkPoint, Skia } from '@shopify/react-native-skia';
 import Concaveman from 'concaveman';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import {
-  makeMutable,
-  runOnJS,
-  runOnUI,
-  useDerivedValue,
-  useSharedValue
-} from 'react-native-reanimated';
+import { runOnJS, runOnUI, useSharedValue } from 'react-native-reanimated';
 
 import { useRemoteLogContext } from '@contexts/RemoteLogContext';
 import { createLogger } from '@helpers/log';
-import { useViewDims } from '@hooks/useViewDims';
-import { simplify } from '../helpers/simplify';
-import { useDualContourBrush } from './DualContourBrush';
+import { simplify } from '@helpers/simplify';
+import { vec2 } from '@types';
 
-const log = createLogger('Painter');
+const log = createLogger('usePointBrush');
 
-type vec2 = [number, number];
-
-export const Painter = () => {
-  const canvasRef = useCanvasRef();
-  const { viewDims, setViewDims } = useViewDims();
-  // const { addPoint, endBrush, points, brushSize, svgPath } =
-  //   useDualContourBrush(viewDims);
-
-  const { addPoint, svgPath, endBrush, hullPath } = usePointBrush();
-  const pan = useGesture({ onUpdate: addPoint, onEnd: endBrush });
-
-  return (
-    <GestureDetector gesture={pan}>
-      <Canvas
-        style={styles.canvas}
-        ref={canvasRef}
-        onLayout={(event) => {
-          setViewDims(event.nativeEvent.layout);
-        }}
-      >
-        <Path path={svgPath} color='black' />
-        <Path path={hullPath} color='red' />
-      </Canvas>
-    </GestureDetector>
-  );
-};
-
-type UseGestureProps = {
-  onUpdate: (point: SkPoint) => void;
-  onEnd?: () => void | undefined;
-};
-
-const useGesture = ({ onUpdate, onEnd }: UseGestureProps) => {
-  const pan = useMemo(
-    () =>
-      Gesture.Pan()
-        .onStart(({ x, y }) => {
-          'worklet';
-          // runOnJS(log.info)('start', { x, y });
-        })
-        .onUpdate(({ x, y }) => {
-          'worklet';
-          // runOnJS(log.info)('update', { x, y });
-          onUpdate({ x, y });
-        })
-        .onEnd(() => {
-          'worklet';
-          runOnJS(log.info)('end');
-          onEnd?.();
-        }),
-    [onUpdate, onEnd]
-  );
-
-  return pan;
-};
-
-const usePointBrush = () => {
+export const usePointBrush = () => {
   const svgPath = useSharedValue(Skia.Path.Make());
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<vec2[]>([]);
@@ -176,11 +103,3 @@ const usePointBrush = () => {
 
   return { svgPath, addPoint, endBrush, hullPath };
 };
-
-const styles = StyleSheet.create({
-  canvas: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: 'cyan'
-  }
-});

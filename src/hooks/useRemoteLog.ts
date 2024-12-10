@@ -13,31 +13,39 @@ export type SendSVGPathParams = {
   path: string;
 };
 
+const parseRoomId = (url: string): { cleanUrl: string; roomId: string } => {
+  try {
+    const urlObj = new URL(url);
+    const roomId = urlObj.searchParams.get('room') ?? 'lobby';
+    urlObj.search = '';
+    return { cleanUrl: urlObj.toString(), roomId };
+  } catch (e) {
+    log.debug('Failed to parse URL', e);
+    return { cleanUrl: url, roomId: 'rn-world-painter' };
+  }
+};
+
 export const useRemoteLog = (url: string) => {
   const socketRef = useRef<Socket | null>(null);
   const channelRef = useRef<Channel | null>(null);
-
-  // const [socket, setSocket] = useState<Socket | null>(null);
-  // const [channel, setChannel] = useState<Channel | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
-    log.debug('Connecting to', url);
+    const { cleanUrl, roomId } = parseRoomId(url);
+    log.debug('Connecting to', cleanUrl, 'room:', roomId);
 
-    const socket = new Socket(url);
+    const socket = new Socket(cleanUrl);
 
     socket.connect();
 
-    const channel = socket.channel('room:lobby', {});
+    const channel = socket.channel(`room:${roomId}`, {});
 
     channel
       .join()
       .receive('ok', (resp) => {
-        log.debug('[join] Joined successfully', resp);
-
+        log.debug(`[join] Joined room:${roomId} successfully`, resp);
         socketRef.current = socket;
         channelRef.current = channel;
-        log.debug('[join] Connected', channel);
       })
       .receive('error', (resp) => {
         log.debug('Failed to join', resp);
@@ -62,7 +70,7 @@ export const useRemoteLog = (url: string) => {
       channelRef.current
         .push('new_message', { body: message })
         .receive('ok', (resp) => {
-          log.debug('Message sent successfully', resp);
+          // log.debug('Message sent successfully', resp);
         })
         .receive('error', (resp) => {
           log.debug('Failed to send message', resp);

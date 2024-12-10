@@ -3,7 +3,6 @@ import React, { ReactNode, createContext, useContext } from 'react';
 import { SendSVGPathParams, useRemoteLog } from '@hooks/useRemoteLog';
 
 interface RemoteLogContextType {
-  isConnected: boolean;
   messages: any[];
   sendMessage: (message: string) => void;
   sendJSON: (json: any) => void;
