@@ -107,6 +107,8 @@ const usePointBrush = () => {
         }
         hullPath.close();
 
+        runOnJS(log.debug)('hullPath', hullPath.toSVGString());
+
         return hullPath;
       });
       // log.debug('generateConcaveHull', outcome);
