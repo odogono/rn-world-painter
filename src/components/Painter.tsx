@@ -20,6 +20,7 @@ import {
   useSharedValue
 } from 'react-native-reanimated';
 
+import { useRemoteLogContext } from '@contexts/RemoteLogContext';
 import { createLogger } from '@helpers/log';
 import { useViewDims } from '@hooks/useViewDims';
 import { simplify } from '../helpers/simplify';
@@ -88,6 +89,7 @@ const usePointBrush = () => {
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<vec2[]>([]);
   const hullPath = useSharedValue(Skia.Path.Make());
+  const rlog = useRemoteLogContext();
 
   const generateConcaveHull = useCallback((points: vec2[]) => {
     const outcome = Concaveman(points, 4, 0) as vec2[];
@@ -98,6 +100,10 @@ const usePointBrush = () => {
 
     log.debug('[generateConcaveHull] simplify', simplified.length);
 
+    rlog.sendMessage(
+      `[generateConcaveHull] generated hull ${outcome.length} / ${simplified.length}`
+    );
+
     runOnUI((hullPoints: vec2[]) => {
       hullPath.modify((hullPath) => {
         hullPath.reset();
@@ -107,7 +113,15 @@ const usePointBrush = () => {
         }
         hullPath.close();
 
-        runOnJS(log.debug)('hullPath', hullPath.toSVGString());
+        const bounds = hullPath.computeTightBounds();
+
+        // runOnJS(log.debug)('hullPath', hullPath.toSVGString());
+
+        runOnJS(rlog.sendSVGPath)({
+          name: 'hull',
+          bounds,
+          path: hullPath.toSVGString()
+        });
 
         return hullPath;
       });
