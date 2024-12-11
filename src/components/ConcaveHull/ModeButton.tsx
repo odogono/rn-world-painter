@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: 'black'
   }
 });

@@ -10,7 +10,8 @@ import {
   CalculateZoomProps,
   calculateZoom as calculateZoomInternal
 } from '../helpers/calculateZoom';
-import { StoreContext } from './context';
+// eslint-disable-next-line import/order
+import { StoreContext, ZoomOnPointProps } from './context';
 
 type AdditionalProps = {
   importState?: any;
@@ -122,13 +123,22 @@ export const StoreProvider = ({
   }, []);
 
   const zoomOnPoint = useCallback(
-    (focalPoint: Vector2, zoomFactor: number, duration: number = 300) => {
-      const { position: toPos, scale: toScale } = calculateZoom({
+    ({
+      focalPoint,
+      zoomFactor = 1,
+      duration = 300,
+      toScale
+    }: ZoomOnPointProps) => {
+      if (!focalPoint) {
+        focalPoint = { x: viewWidth / 2, y: viewHeight / 2 };
+      }
+      const { position: toPos, scale } = calculateZoom({
         focalPoint,
-        zoomFactor
+        zoomFactor,
+        toScale
       });
       mViewPosition.value = withTiming(toPos, { duration });
-      mViewScale.value = withTiming(toScale, { duration });
+      mViewScale.value = withTiming(scale, { duration });
     },
     []
   );

@@ -14,7 +14,9 @@ import Animated, {
 
 const styles = StyleSheet.create({
   baseStyle: {
-    color: 'black'
+    color: 'black',
+    fontFamily: 'menlo',
+    fontSize: 12
   }
 });
 

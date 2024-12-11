@@ -8,6 +8,7 @@ import { useRemoteLogContext } from '@contexts/RemoteLogContext';
 import { createLogger } from '@helpers/log';
 import { simplify } from '@helpers/simplify';
 import { Position } from '@types';
+import { featureGeometryToLocal } from '../../helpers/geo';
 import { createBrushFeature } from '../../model/brushFeature';
 
 const log = createLogger('usePointBrush');
@@ -25,11 +26,11 @@ export const usePointBrush = () => {
   const generateConcaveHull = useCallback((points: Position[]) => {
     const outcome = Concaveman(points, 3, 20) as Position[];
 
-    log.debug('[generateConcaveHull] concaveman', outcome.length);
+    // log.debug('[generateConcaveHull] concaveman', outcome.length);
 
     const simplified = simplify(outcome, 6, true);
 
-    log.debug('[generateConcaveHull] simplify', simplified.length);
+    // log.debug('[generateConcaveHull] simplify', simplified.length);
 
     // create a geojson feature
     const feature = createBrushFeature({
@@ -37,7 +38,9 @@ export const usePointBrush = () => {
       isLocal: true
     });
 
-    log.debug('[generateConcaveHull] feature', feature);
+    featureGeometryToLocal(feature);
+
+    // log.debug('[generateConcaveHull] feature', feature);
 
     runOnUI((hullPoints: Position[]) => {
       hullPath.modify((hullPath) => {

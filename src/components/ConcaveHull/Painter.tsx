@@ -1,13 +1,27 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Canvas, Path, useCanvasRef } from '@shopify/react-native-skia';
+import {
+  Canvas,
+  Group,
+  Path,
+  Rect,
+  useCanvasRef
+} from '@shopify/react-native-skia';
 import { GestureDetector } from 'react-native-gesture-handler';
+import { useAnimatedReaction } from 'react-native-reanimated';
 
+import {
+  Debug,
+  formatVector2,
+  setDebugMsg1,
+  setDebugMsg2
+} from '@components/Debug/Debug';
 import { createLogger } from '@helpers/log';
-import { useViewDims } from '@hooks/useViewDims';
-import { Debug } from '../Debug/Debug';
+import { useStore, useStoreState, useStoreViewDims } from '@model/useStore';
+import { Vector2 } from '@types';
 import { ModeButton } from './ModeButton';
+import { ZoomControls } from './ZoomControls';
 import { useGesture } from './useGesture';
 import { usePointBrush } from './usePointBrush';
 
@@ -15,9 +29,34 @@ const log = createLogger('Painter');
 
 export const Painter = () => {
   const canvasRef = useCanvasRef();
-  const { viewDims, setViewDims } = useViewDims();
+
+  const {
+    setViewDims,
+    width: viewWidth,
+    height: viewHeight
+  } = useStoreViewDims();
+
   const { addPoint, svgPath, endBrush, hullPath } = usePointBrush();
-  const pan = useGesture({ onUpdate: addPoint, onEnd: endBrush });
+
+  const pan = useGesture({
+    isWorldMoveEnabled: true,
+    onUpdate: addPoint,
+    onEnd: endBrush
+  });
+
+  const [mViewMatrix, mViewPosition, mViewScale] = useStoreState((state) => [
+    state.mViewMatrix,
+    state.mViewPosition,
+    state.mViewScale
+  ]);
+
+  useAnimatedReaction(
+    () => [mViewPosition.value, mViewScale.value] as [Vector2, number],
+    ([position, scale]) => {
+      setDebugMsg1(formatVector2(position));
+      setDebugMsg2(scale.toString());
+    }
+  );
 
   return (
     <View style={styles.container}>
@@ -26,15 +65,20 @@ export const Painter = () => {
           style={styles.canvas}
           ref={canvasRef}
           onLayout={(event) => {
-            setViewDims(event.nativeEvent.layout);
+            const { width, height } = event.nativeEvent.layout;
+            setViewDims(width, height);
           }}
         >
+          <Group matrix={mViewMatrix}>
+            <Rect x={-5} y={-5} width={10} height={10} color='red' />
+          </Group>
           <Path path={svgPath} color='black' />
           <Path path={hullPath} color='#444' />
         </Canvas>
       </GestureDetector>
 
       <ModeButton />
+      <ZoomControls />
 
       <Debug />
     </View>

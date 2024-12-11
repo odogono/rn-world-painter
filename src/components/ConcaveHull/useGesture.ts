@@ -3,30 +3,66 @@ import { useMemo } from 'react';
 import { SkPoint } from '@shopify/react-native-skia';
 import { Gesture } from 'react-native-gesture-handler';
 
+import { useStore } from '@model/useStore';
+
 export type UseGestureProps = {
+  isWorldMoveEnabled?: boolean;
   onUpdate: (point: SkPoint) => void;
   onEnd?: () => void | undefined;
 };
 
-export const useGesture = ({ onUpdate, onEnd }: UseGestureProps) => {
+export const useGesture = ({
+  isWorldMoveEnabled = false,
+  onUpdate,
+  onEnd
+}: UseGestureProps) => {
+  const { mViewPosition, mViewBBox, screenToWorld, zoomOnPoint } = useStore();
+
   const pan = useMemo(
     () =>
       Gesture.Pan()
         .onStart(({ x, y }) => {
           'worklet';
-          onUpdate({ x, y });
+
+          if (isWorldMoveEnabled) {
+            // onUpdate({ x, y });
+          } else {
+            onUpdate({ x, y });
+          }
           // runOnJS(log.info)('start', { x, y });
+        })
+        .onChange(({ changeX, changeY }) => {
+          'worklet';
+          if (!isWorldMoveEnabled) {
+            return;
+          }
+          // const { x, y } = mViewPosition.value;
+          mViewPosition.modify((pos) => {
+            pos.x -= changeX;
+            pos.y -= changeY;
+            return pos;
+          });
+          // mViewPosition.value = { x: x - changeX, y: y - changeY };
         })
         .onUpdate(({ x, y }) => {
           'worklet';
           // runOnJS(log.info)('update', { x, y });
-          onUpdate({ x, y });
+          if (isWorldMoveEnabled) {
+            // onUpdate({ x, y });
+          } else {
+            onUpdate({ x, y });
+          }
         })
         .onEnd(() => {
           'worklet';
-          onEnd?.();
+
+          if (isWorldMoveEnabled) {
+            // onEnd?.();
+          } else {
+            onEnd?.();
+          }
         }),
-    [onUpdate, onEnd]
+    [isWorldMoveEnabled, onUpdate, onEnd]
   );
 
   return pan;

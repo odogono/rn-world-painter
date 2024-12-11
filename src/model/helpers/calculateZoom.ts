@@ -20,7 +20,7 @@ export const calculateZoom = ({
   position
 }: CalculateZoomProps) => {
   const oldScale = scale!;
-  const newScale = toScale ?? clamp(scale! * zoomFactor!, 0.1, 5);
+  const newScale = toScale ?? clamp(scale! * zoomFactor!, 0.1, 50);
 
   // Convert focal point to world coordinates before scaling
   const scaleDiff = newScale / oldScale;
