@@ -1,3 +1,5 @@
+import type { LayoutRectangle } from 'react-native';
+
 import { SkMatrix, Skia } from '@shopify/react-native-skia';
 import {
   Easing,
@@ -21,6 +23,7 @@ export type ViewSliceProps = {
 
   viewWidth: number;
   viewHeight: number;
+  viewLayout: LayoutRectangle;
 };
 
 export type MoveToPositionOptions = {
@@ -51,7 +54,8 @@ const defaultState: ViewSliceProps = {
   mViewInverseMatrix: makeMutable<SkMatrix>(Skia.Matrix()),
   mViewBBox: makeMutable<BBox>([0, 0, 0, 0]),
   viewWidth: 0,
-  viewHeight: 0
+  viewHeight: 0,
+  viewLayout: { width: 0, height: 0, x: 0, y: 0 }
 };
 
 const log = createLogger('viewSlice');
@@ -74,7 +78,8 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (
   setViewScreenDims: (width: number, height: number) =>
     set((state) => ({
       viewWidth: width,
-      viewHeight: height
+      viewHeight: height,
+      viewLayout: { width, height, x: 0, y: 0 }
     })),
 
   convertWorldToScreen: (position: Vector2) => {

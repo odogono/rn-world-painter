@@ -29,6 +29,7 @@ const log = createLogger('Painter');
 
 export const Painter = () => {
   const canvasRef = useCanvasRef();
+  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
 
   const {
     setViewDims,
@@ -39,7 +40,7 @@ export const Painter = () => {
   const { addPoint, svgPath, endBrush, hullPath } = usePointBrush();
 
   const pan = useGesture({
-    isWorldMoveEnabled: true,
+    isWorldMoveEnabled,
     onUpdate: addPoint,
     onEnd: endBrush
   });
@@ -70,14 +71,18 @@ export const Painter = () => {
           }}
         >
           <Group matrix={mViewMatrix}>
-            <Rect x={-5} y={-5} width={10} height={10} color='red' />
+            <Rect x={-15} y={-15} width={30} height={30} color='red' />
+            <Rect x={-15} y={-15 + 60} width={30} height={30} color='black' />
           </Group>
           <Path path={svgPath} color='black' />
           <Path path={hullPath} color='#444' />
         </Canvas>
       </GestureDetector>
 
-      <ModeButton />
+      <ModeButton
+        isWorldMoveEnabled={isWorldMoveEnabled}
+        onPress={() => setIsWorldMoveEnabled(!isWorldMoveEnabled)}
+      />
       <ZoomControls />
 
       <Debug />

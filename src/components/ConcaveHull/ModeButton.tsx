@@ -5,17 +5,23 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 type Mode = 'draw' | 'move';
 
-export const ModeButton = () => {
-  const [mode, setMode] = useState<Mode>('draw');
+export const ModeButton = ({
+  isWorldMoveEnabled,
+  onPress
+}: {
+  isWorldMoveEnabled: boolean;
+  onPress: () => void;
+}) => {
+  // const [mode, setMode] = useState<Mode>('draw');
 
-  const toggleMode = () => {
-    setMode(mode === 'draw' ? 'move' : 'draw');
-  };
+  // const toggleMode = () => {
+  //   setMode(mode === 'draw' ? 'move' : 'draw');
+  // };
 
   return (
-    <Pressable style={styles.modeButton} onPress={toggleMode}>
+    <Pressable style={styles.modeButton} onPress={onPress}>
       <MaterialIcons
-        name={mode === 'draw' ? 'edit' : 'pan-tool'}
+        name={isWorldMoveEnabled ? 'pan-tool' : 'edit'}
         size={24}
         color='black'
       />

@@ -1,19 +1,22 @@
-import { clamp } from 'react-native-reanimated';
+import { clamp, runOnJS } from 'react-native-reanimated';
 
+import { createLogger } from '@helpers/log';
 import { Vector2Create } from '@helpers/vector2';
 import { Vector2 } from '@types';
 
 export type CalculateZoomProps = {
   focalPoint: Vector2;
-  worldFocalPoint?: Vector2;
+  // worldFocalPoint?: Vector2;
   zoomFactor?: number;
   toScale?: number | undefined;
   scale?: number;
   position?: Vector2;
 };
 
+const log = createLogger('calculateZoom');
+
 export const calculateZoom = ({
-  worldFocalPoint,
+  // worldFocalPoint,
   zoomFactor,
   toScale,
   scale,
@@ -25,13 +28,9 @@ export const calculateZoom = ({
   // Convert focal point to world coordinates before scaling
   const scaleDiff = newScale / oldScale;
 
-  // Calculate the new position to keep the focal point stationary
-  let posX = worldFocalPoint!.x - position!.x;
-  let posY = worldFocalPoint!.y - position!.y;
-  posX = worldFocalPoint!.x - posX;
-  posY = worldFocalPoint!.y - posY;
-  posX = posX * scaleDiff;
-  posY = posY * scaleDiff;
+  const posX = position!.x * scaleDiff;
+  const posY = position!.y * scaleDiff;
+
   const pos = Vector2Create(posX, posY);
   return { position: pos, scale: newScale };
 };

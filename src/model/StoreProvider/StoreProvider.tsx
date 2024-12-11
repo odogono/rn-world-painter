@@ -1,9 +1,14 @@
 /* eslint-disable react-compiler/react-compiler */
 import { useCallback, useRef } from 'react';
 
-import { useAnimatedReaction, withTiming } from 'react-native-reanimated';
+import {
+  runOnJS,
+  useAnimatedReaction,
+  withTiming
+} from 'react-native-reanimated';
 import { useStore } from 'zustand';
 
+import { createLogger } from '@helpers/log';
 import { Vector2 } from '@types';
 import { store, type Store, type StoreProps } from '../Store';
 import {
@@ -20,6 +25,8 @@ type AdditionalProps = {
 type ProviderProps = React.PropsWithChildren<
   Partial<StoreProps> & AdditionalProps
 >;
+
+const log = createLogger('StoreProvider');
 
 export const StoreProvider = ({
   children,
@@ -40,8 +47,9 @@ export const StoreProvider = ({
     mViewBBox
   } = storeRef.current.getState();
 
-  const viewWidth = useStore(storeRef.current, (state) => state.viewWidth);
-  const viewHeight = useStore(storeRef.current, (state) => state.viewHeight);
+  // const viewWidth = useStore(storeRef.current, (state) => state.viewWidth);
+  // const viewHeight = useStore(storeRef.current, (state) => state.viewHeight);
+  const viewLayout = useStore(storeRef.current, (state) => state.viewLayout);
 
   useAnimatedReaction(
     () => [mViewPosition.value, mViewScale.value] as [Vector2, number],
@@ -50,8 +58,8 @@ export const StoreProvider = ({
 
       // update the bbox
       const [sx, sy] = [x / scale, y / scale];
-      const width = viewWidth / scale;
-      const height = viewHeight / scale;
+      const width = viewLayout.width / scale;
+      const height = viewLayout.height / scale;
       const hWidth = width / 2;
       const hHeight = height / 2;
 
@@ -63,7 +71,7 @@ export const StoreProvider = ({
         m.identity();
 
         // Translate to the center of the screen
-        m.translate(viewWidth / 2, viewHeight / 2);
+        m.translate(viewLayout.width / 2, viewLayout.height / 2);
 
         m.translate(-x, -y);
 
@@ -81,7 +89,7 @@ export const StoreProvider = ({
 
         m.translate(x, y);
 
-        m.translate(-viewWidth / 2, -viewHeight / 2);
+        m.translate(-viewLayout.width / 2, -viewLayout.height / 2);
 
         return m;
       });
@@ -113,12 +121,15 @@ export const StoreProvider = ({
   const calculateZoom = useCallback((props: CalculateZoomProps) => {
     'worklet';
     // Convert focal point to world coordinates before scaling
-    const worldFocalPoint = screenToWorld(props.focalPoint);
+    // const worldFocalPoint = screenToWorld(props.focalPoint);
+
+    // runOnJS(log.debug)('calculateZoom', worldFocalPoint.x, worldFocalPoint.y);
+
     return calculateZoomInternal({
       ...props,
-      worldFocalPoint,
+      // worldFocalPoint,
       scale: mViewScale.value,
-      position: mViewPosition.value
+      position: props.focalPoint ?? mViewPosition.value
     });
   }, []);
 
@@ -130,15 +141,26 @@ export const StoreProvider = ({
       toScale
     }: ZoomOnPointProps) => {
       if (!focalPoint) {
-        focalPoint = { x: viewWidth / 2, y: viewHeight / 2 };
+        focalPoint = mViewPosition.value;
+      } else {
+        focalPoint = mViewPosition.value;
+        // focalPoint = screenToWorld(focalPoint);
       }
+
+      // runOnJS(log.debug)('zoomOnPoint', focalPoint.x, focalPoint.y);
       const { position: toPos, scale } = calculateZoom({
         focalPoint,
         zoomFactor,
         toScale
       });
-      mViewPosition.value = withTiming(toPos, { duration });
-      mViewScale.value = withTiming(scale, { duration });
+
+      if (duration) {
+        mViewPosition.value = withTiming(toPos, { duration });
+        mViewScale.value = withTiming(scale, { duration });
+      } else {
+        mViewPosition.value = toPos;
+        mViewScale.value = scale;
+      }
     },
     []
   );
@@ -154,7 +176,8 @@ export const StoreProvider = ({
         store: storeRef.current,
         worldToScreen,
         screenToWorld,
-        zoomOnPoint
+        zoomOnPoint,
+        viewLayout
       }}
     >
       {children}
