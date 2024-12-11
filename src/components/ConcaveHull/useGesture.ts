@@ -14,6 +14,7 @@ export const useGesture = ({ onUpdate, onEnd }: UseGestureProps) => {
       Gesture.Pan()
         .onStart(({ x, y }) => {
           'worklet';
+          onUpdate({ x, y });
           // runOnJS(log.info)('start', { x, y });
         })
         .onUpdate(({ x, y }) => {

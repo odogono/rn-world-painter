@@ -7,31 +7,39 @@ import { runOnJS, runOnUI, useSharedValue } from 'react-native-reanimated';
 import { useRemoteLogContext } from '@contexts/RemoteLogContext';
 import { createLogger } from '@helpers/log';
 import { simplify } from '@helpers/simplify';
-import { vec2 } from '@types';
+import { Position } from '@types';
+import { createBrushFeature } from '../../model/brushFeature';
 
 const log = createLogger('usePointBrush');
 
 export const usePointBrush = () => {
   const svgPath = useSharedValue(Skia.Path.Make());
   const addTime = useSharedValue(Date.now());
-  const points = useSharedValue<vec2[]>([]);
+  const points = useSharedValue<Position[]>([]);
   const hullPath = useSharedValue(Skia.Path.Make());
   const rlog = useRemoteLogContext();
 
-  const generateConcaveHull = useCallback((points: vec2[]) => {
-    const outcome = Concaveman(points, 4, 0) as vec2[];
+  const brushSize = useSharedValue(30);
+  const brushResolution = useSharedValue(16);
+
+  const generateConcaveHull = useCallback((points: Position[]) => {
+    const outcome = Concaveman(points, 3, 20) as Position[];
 
     log.debug('[generateConcaveHull] concaveman', outcome.length);
 
-    const simplified = simplify(outcome, 3, false);
+    const simplified = simplify(outcome, 6, true);
 
     log.debug('[generateConcaveHull] simplify', simplified.length);
 
-    rlog.sendMessage(
-      `[generateConcaveHull] generated hull ${outcome.length} / ${simplified.length}`
-    );
+    // create a geojson feature
+    const feature = createBrushFeature({
+      points: simplified,
+      isLocal: true
+    });
 
-    runOnUI((hullPoints: vec2[]) => {
+    log.debug('[generateConcaveHull] feature', feature);
+
+    runOnUI((hullPoints: Position[]) => {
       hullPath.modify((hullPath) => {
         hullPath.reset();
         hullPath.moveTo(hullPoints[0][0], hullPoints[0][1]);
@@ -40,15 +48,17 @@ export const usePointBrush = () => {
         }
         hullPath.close();
 
-        const bounds = hullPath.computeTightBounds();
+        // const bounds = hullPath.computeTightBounds();
 
-        // runOnJS(log.debug)('hullPath', hullPath.toSVGString());
+        // hullPath.toCmds();
 
-        runOnJS(rlog.sendSVGPath)({
-          name: 'hull',
-          bounds,
-          path: hullPath.toSVGString()
-        });
+        // runOnJS(log.debug)('hullPath', hullPath.toCmds());
+
+        // runOnJS(rlog.sendSVGPath)({
+        //   name: 'hull',
+        //   bounds,
+        //   path: hullPath.toSVGString()
+        // });
 
         return hullPath;
       });
@@ -72,10 +82,11 @@ export const usePointBrush = () => {
     addTime.value = time;
 
     svgPath.modify((path) => {
-      // add 5 points in a circle around the x and y
-      for (let i = 0; i < 12; i++) {
-        const px = x + Math.cos((i * Math.PI) / 6) * 10;
-        const py = y + Math.sin((i * Math.PI) / 6) * 10;
+      // add 12 points in a circle around the x and y
+      for (let i = 0; i < brushResolution.value; i++) {
+        const angle = (Math.PI * 2) / brushResolution.value;
+        const px = x + Math.cos(i * angle) * brushSize.value;
+        const py = y + Math.sin(i * angle) * brushSize.value;
 
         points.value = [...points.value, [px, py]];
 

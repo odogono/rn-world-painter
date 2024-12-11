@@ -31,7 +31,8 @@ export const ReText = (props: TextProps) => {
   const { text, style } = { style: {}, ...props };
   const animatedProps = useAnimatedProps(() => {
     return {
-      text: text.value
+      text: text.value,
+      value: text.value
       // Here we use any because the text prop is not available in the type
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
@@ -40,7 +41,6 @@ export const ReText = (props: TextProps) => {
     <AnimatedTextInput
       underlineColorAndroid='transparent'
       editable={false}
-      value={text.value}
       style={[styles.baseStyle, style]}
       {...{ animatedProps }}
     />

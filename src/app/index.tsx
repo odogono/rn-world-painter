@@ -6,9 +6,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Painter } from '@components/ConcaveHull/Painter';
 import { RemoteLogProvider } from '@contexts/RemoteLogContext';
 
+const logServerUrl = process.env.EXPO_PUBLIC_LOG_SERVER_URL ?? '';
+
 export default () => {
   return (
-    <RemoteLogProvider url='wss://kid-large-rightly.ngrok-free.app/socket?room=rn-world-painter'>
+    <RemoteLogProvider url={logServerUrl}>
       <GestureHandlerRootView style={styles.gestureContainer}>
         <View style={styles.container}>
           <Painter />

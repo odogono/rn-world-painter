@@ -20,9 +20,11 @@ export type { BBox } from 'geojson';
 
 export type Position = [number, number];
 
-export interface WPFeatureProperties {
+export interface BrushFeatureProperties {
+  position: Position;
   odgnId?: string;
   color: string;
+  isLocal?: boolean;
 }
 
-export type WPFeature = Feature<Polygon, WPFeatureProperties>;
+export type BrushFeature = Feature<Polygon, BrushFeatureProperties>;

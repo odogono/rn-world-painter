@@ -31,38 +31,42 @@ export const useRemoteLog = (url: string) => {
   const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
-    const { cleanUrl, roomId } = parseRoomId(url);
-    log.debug('Connecting to', cleanUrl, 'room:', roomId);
+    try {
+      const { cleanUrl, roomId } = parseRoomId(url);
+      log.debug('Connecting to', cleanUrl, 'room:', roomId);
 
-    const socket = new Socket(cleanUrl);
+      const socket = new Socket(cleanUrl);
 
-    socket.connect();
+      socket.connect();
 
-    const channel = socket.channel(`room:${roomId}`, {});
+      const channel = socket.channel(`room:${roomId}`, {});
 
-    channel
-      .join()
-      .receive('ok', (resp) => {
-        log.debug(`[join] Joined room:${roomId} successfully`, resp);
-        socketRef.current = socket;
-        channelRef.current = channel;
-      })
-      .receive('error', (resp) => {
-        log.debug('Failed to join', resp);
+      channel
+        .join()
+        .receive('ok', (resp) => {
+          log.debug(`[join] Joined room:${roomId} successfully`, resp);
+          socketRef.current = socket;
+          channelRef.current = channel;
+        })
+        .receive('error', (resp) => {
+          log.debug('Failed to join', resp);
+        });
+
+      channel.on('new_message', (payload: any) => {
+        log.debug('New message received', payload);
+        setMessages((prevMessages) => [...prevMessages, payload]);
       });
 
-    channel.on('new_message', (payload: any) => {
-      log.debug('New message received', payload);
-      setMessages((prevMessages) => [...prevMessages, payload]);
-    });
-
-    return () => {
-      log.debug('Disconnecting from', url);
-      channel.leave();
-      socket.disconnect();
-      channelRef.current = null;
-      socketRef.current = null;
-    };
+      return () => {
+        log.debug('Disconnecting from', url);
+        channel.leave();
+        socket.disconnect();
+        channelRef.current = null;
+        socketRef.current = null;
+      };
+    } catch (e) {
+      log.debug('Failed to connect to', url, e);
+    }
   }, []);
 
   const sendMessage = useCallback((message: string) => {
@@ -85,12 +89,13 @@ export const useRemoteLog = (url: string) => {
   }, []);
 
   const sendSVGPath = useCallback(
-    ({ name, path, bounds }: SendSVGPathParams) => {
+    ({ name, path, bounds, ...props }: SendSVGPathParams) => {
       if (channelRef.current) {
         const { x, y, width, height } = bounds;
 
         channelRef.current.push('new_message', {
           body: {
+            ...props,
             type: 'svg_path',
             name,
             path,

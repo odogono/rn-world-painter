@@ -4,11 +4,11 @@ import { makeMutable } from 'react-native-reanimated';
 
 import { ReText } from './ReText';
 
-export const debugMsg = makeMutable<string>('Hello');
-export const debugMsg2 = makeMutable<string>('World');
-export const debugMsg3 = makeMutable<string>('!');
-export const debugMsg4 = makeMutable<string>('4');
-export const debugMsg5 = makeMutable<string>('5');
+export const debugMsg = makeMutable<string>('▪');
+export const debugMsg2 = makeMutable<string>('▪');
+export const debugMsg3 = makeMutable<string>('▪');
+export const debugMsg4 = makeMutable<string>('▪');
+export const debugMsg5 = makeMutable<string>('▪');
 
 export const Debug = () => {
   return (
@@ -26,9 +26,10 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 46,
+    left: 16,
     width: '80%'
   },
   debugText: {
-    color: '#fff'
+    color: '#000'
   }
 });
