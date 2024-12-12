@@ -7,6 +7,7 @@ import { createLogger } from '@helpers/log';
 import { useStore, useStoreState } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature } from '@types';
+import { setDebugMsg3, setDebugMsg4 } from '../Debug/Debug';
 
 const log = createLogger('ShapeRenderer');
 
@@ -41,6 +42,7 @@ export const ShapeRenderer = () => {
     if (visibleIds !== visibleTileIdsRef.current) {
       visibleTileIdsRef.current = visibleIds;
       setVisibleFeatures(visibleFeatures);
+      setDebugMsg4(`visibleFeatures: ${visibleFeatures.length}`);
     }
   }, []);
 
@@ -67,7 +69,9 @@ const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
     return p;
   }, [shape]);
 
-  return <Path path={path} color='#444' />;
+  const color = shape.properties.color ?? '#444';
+
+  return <Path path={path} color={color} />;
 };
 
 const applyBrushFeatureToPath = (shape: BrushFeature, path: SkPath) => {

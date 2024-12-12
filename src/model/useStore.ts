@@ -39,3 +39,7 @@ export const useStoreViewDims = () => {
 export const useStoreViewLayout = (): LayoutRectangle => {
   return useStoreState((state) => state.viewLayout);
 };
+
+export const useStoreSetViewLayout = () => {
+  return useStoreState((state) => state.setViewScreenDims);
+};

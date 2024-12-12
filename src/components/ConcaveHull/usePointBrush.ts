@@ -19,9 +19,9 @@ export const usePointBrush = () => {
   const svgPath = useSharedValue(Skia.Path.Make());
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<Position[]>([]);
-  const hullPath = useSharedValue(Skia.Path.Make());
+  // const hullPath = useSharedValue(Skia.Path.Make());
 
-  const shapeFeature = useSharedValue<BrushFeature | null>(null);
+  // const shapeFeature = useSharedValue<BrushFeature | null>(null);
   const rlog = useRemoteLogContext();
   const { screenToWorld, mViewBBox, screenToWorldPoints } = useStore();
 
@@ -54,35 +54,35 @@ export const usePointBrush = () => {
 
       feature.geometry.coordinates[0] = worldPoints;
 
-      shapeFeature.value = feature;
+      // shapeFeature.value = feature;
 
-      runOnJS(addFeature)(feature);
+      runOnJS(addFeature)(feature, { updateBBox: true });
 
-      hullPath.modify((hullPath) => {
-        hullPath.reset();
+      // hullPath.modify((hullPath) => {
+      //   hullPath.reset();
 
-        const points = feature.geometry.coordinates[0];
+      //   const points = feature.geometry.coordinates[0];
 
-        hullPath.moveTo(points[0][0], points[0][1]);
-        for (let ii = 1; ii < points.length; ii++) {
-          hullPath.lineTo(points[ii][0], points[ii][1]);
-        }
-        hullPath.close();
+      //   hullPath.moveTo(points[0][0], points[0][1]);
+      //   for (let ii = 1; ii < points.length; ii++) {
+      //     hullPath.lineTo(points[ii][0], points[ii][1]);
+      //   }
+      //   hullPath.close();
 
-        // const bounds = hullPath.computeTightBounds();
+      //   // const bounds = hullPath.computeTightBounds();
 
-        // hullPath.toCmds();
+      //   // hullPath.toCmds();
 
-        // runOnJS(log.debug)('hullPath', hullPath.toCmds());
+      //   // runOnJS(log.debug)('hullPath', hullPath.toCmds());
 
-        // runOnJS(rlog.sendSVGPath)({
-        //   name: 'hull',
-        //   bounds,
-        //   path: hullPath.toSVGString()
-        // });
+      //   // runOnJS(rlog.sendSVGPath)({
+      //   //   name: 'hull',
+      //   //   bounds,
+      //   //   path: hullPath.toSVGString()
+      //   // });
 
-        return hullPath;
-      });
+      //   return hullPath;
+      // });
       // log.debug('generateConcaveHull', outcome);
     })(feature);
 
@@ -133,5 +133,5 @@ export const usePointBrush = () => {
     points.value = [];
   }, []);
 
-  return { svgPath, addPoint, endBrush, hullPath, shapeFeature };
+  return { svgPath, addPoint, endBrush };
 };

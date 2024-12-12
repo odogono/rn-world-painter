@@ -1,7 +1,13 @@
 import { StateCreator } from 'zustand';
 
+import {
+  bboxToLayoutRectangle,
+  bboxToString,
+  calculateBBox,
+  coordinatesToString
+} from '@helpers/geo';
 import { createLogger } from '@helpers/log';
-import { BBox, BrushFeature, Mutable, Vector2 } from '@types';
+import { BBox, BrushFeature } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
 
 export type FeatureSliceProps = {
@@ -10,8 +16,12 @@ export type FeatureSliceProps = {
   spatialIndex: FeatureRBush;
 };
 
+export type AddFeatureOptions = {
+  updateBBox?: boolean;
+};
+
 export type FeatureSliceActions = {
-  addFeature: (feature: BrushFeature) => void;
+  addFeature: (feature: BrushFeature, options?: AddFeatureOptions) => void;
   resetFeatures: () => void;
   getVisibleFeatures: (bbox: BBox) => BrushFeature[];
 };
@@ -33,9 +43,24 @@ export const createFeatureSlice: StateCreator<
 > = (set, get) => ({
   ...defaultState,
 
-  addFeature: (feature: BrushFeature) => {
+  addFeature: (feature: BrushFeature, options: AddFeatureOptions = {}) => {
     set((state) => {
+      if (options.updateBBox) {
+        feature.bbox = calculateBBox(feature.geometry);
+      }
+
       state.spatialIndex.insert(feature);
+
+      // log.debug(
+      //   '[addFeature] feature',
+      //   feature.id,
+      //   bboxToString(feature.bbox!)
+      // );
+      // log.debug(
+      //   '[addFeature] feature',
+      //   feature.id,
+      //   coordinatesToString(feature.geometry.coordinates[0])
+      // );
 
       return { ...state, features: [...state.features, feature] };
     });

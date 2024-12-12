@@ -6,6 +6,7 @@ import {
   Group,
   Path,
   Rect,
+  SkPath,
   Skia,
   useCanvasRef
 } from '@shopify/react-native-skia';
@@ -21,9 +22,15 @@ import {
   setDebugMsg2,
   setDebugMsg3
 } from '@components/Debug/Debug';
+import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
-import { useStore, useStoreState, useStoreViewDims } from '@model/useStore';
-import { BBox, Vector2 } from '@types';
+import {
+  useStore,
+  useStoreSetViewLayout,
+  useStoreState
+} from '@model/useStore';
+import { useStoreActions } from '@model/useStoreActions';
+import { BBox, BrushFeature, Vector2 } from '@types';
 import { MiniMap } from './MiniMap';
 import { ModeButton } from './ModeButton';
 import { ShapeRenderer } from './ShapeRenderer';
@@ -38,14 +45,20 @@ export const Painter = () => {
   const canvasRef = useCanvasRef();
   const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
 
-  const {
-    setViewDims,
-    width: viewWidth,
-    height: viewHeight
-  } = useStoreViewDims();
+  const { addFeature, resetFeatures } = useStoreActions();
 
-  const { addPoint, svgPath, endBrush, hullPath, shapeFeature } =
-    usePointBrush();
+  useEffect(() => {
+    addFeature(testFeature as BrushFeature);
+    addFeature(testFeature2 as BrushFeature);
+
+    return () => {
+      resetFeatures();
+    };
+  }, []);
+
+  const setViewLayout = useStoreSetViewLayout();
+
+  const { addPoint, svgPath, endBrush } = usePointBrush();
 
   const pan = useGesture({
     isWorldMoveEnabled,
@@ -53,14 +66,14 @@ export const Painter = () => {
     onEnd: endBrush
   });
 
-  const [mViewMatrix, mViewPosition, mViewScale, mViewBBox, features] =
-    useStoreState((state) => [
+  const [mViewMatrix, mViewPosition, mViewScale, mViewBBox] = useStoreState(
+    (state) => [
       state.mViewMatrix,
       state.mViewPosition,
       state.mViewScale,
-      state.mViewBBox,
-      state.features
-    ]);
+      state.mViewBBox
+    ]
+  );
 
   useAnimatedReaction(
     () =>
@@ -76,17 +89,6 @@ export const Painter = () => {
     }
   );
 
-  const shapeMatrix = useDerivedValue(() => {
-    const m = Skia.Matrix();
-    // if (shapeFeature.value) {
-    //   m.translate(
-    //     shapeFeature.value.properties.position.x,
-    //     shapeFeature.value.properties.position.y
-    //   );
-    // }
-    return m;
-  });
-
   return (
     <View style={styles.container}>
       <GestureDetector gesture={pan}>
@@ -95,13 +97,13 @@ export const Painter = () => {
           ref={canvasRef}
           onLayout={(event) => {
             const { width, height } = event.nativeEvent.layout;
-            setViewDims(width, height);
+            setViewLayout(width, height);
           }}
         >
           <ContextBridge>
             <Group matrix={mViewMatrix}>
-              <Rect x={-15} y={-15} width={30} height={30} color='red' />
-              <Rect x={-15} y={-15 + 60} width={30} height={30} color='black' />
+              {/* <Rect x={-15} y={-15} width={30} height={30} color='red' />
+              <Rect x={-15} y={-15 + 60} width={30} height={30} color='black' /> */}
 
               <ShapeRenderer />
 
@@ -139,3 +141,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEE'
   }
 });
+
+const boxFeature: BrushFeature = {
+  id: 'debug-a',
+  type: 'Feature',
+  bbox: [-50, -50, 50, 50],
+  properties: {
+    position: { x: 0, y: 0 },
+    isLocal: false,
+    color: '#F67280'
+  },
+  geometry: {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [-50, -50],
+        [50, -50],
+        [50, 50],
+        [-50, 50],
+        [-50, -50]
+      ]
+    ]
+  }
+};
+
+const testFeature = translateBrushFeature(
+  boxFeature,
+  { x: 0, y: -100 },
+  { color: 'red', id: 'test-a' }
+);
+const testFeature2 = translateBrushFeature(
+  boxFeature,
+  { x: 0, y: 100 },
+  { color: 'black', id: 'test-b' }
+);

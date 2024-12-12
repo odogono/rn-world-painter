@@ -1,10 +1,19 @@
 import { LayoutRectangle } from 'react-native';
 
+import { Position as GeoJSONPosition } from 'geojson';
+
 import { bbox as calculateBbox } from '@turf/bbox';
 import { BBox, BrushFeature, Position, Vector2 } from '@types';
 import { createLogger } from './log';
+import { generateUUID } from './uuid';
+
+export { bbox as calculateBBox } from '@turf/bbox';
 
 const log = createLogger('geo');
+
+type AdditionalProperties = Partial<BrushFeature['properties']> & {
+  id?: string;
+};
 
 export const getBBoxCenter = (bbox: BBox): Vector2 => {
   return {
@@ -19,6 +28,76 @@ export const bboxToLayoutRectangle = (bbox: BBox): LayoutRectangle => {
     y: bbox[1],
     width: bbox[2] - bbox[0],
     height: bbox[3] - bbox[1]
+  };
+};
+
+const formatFixed = (value: number, precision: number = 2) => {
+  if (value < 0) {
+    return value.toFixed(precision);
+  } else {
+    return `+${value.toFixed(precision)}`;
+  }
+};
+
+export const bboxToString = (bbox: BBox, precision: number = 2) => {
+  const [minX, minY, maxX, maxY] = bbox;
+  const x = minX;
+  const y = minY;
+  const w = maxX - minX;
+  const h = maxY - minY;
+  return `x: ${formatFixed(x, precision)}, y: ${formatFixed(y, precision)}, w: ${formatFixed(w, precision)}, h: ${formatFixed(h, precision)}`;
+};
+
+export const coordinatesToString = (
+  coordinates: Position[] | GeoJSONPosition[]
+) => {
+  return coordinates
+    .map((point) => {
+      return `[${formatFixed(point[0], 2)}, ${formatFixed(point[1], 2)}]`;
+    })
+    .join(', ');
+};
+
+/**
+ * Translates the feature by the offset, updating the bbox and geometry
+ *
+ * @param feature
+ * @param offset
+ * @returns
+ */
+export const translateBrushFeature = (
+  feature: BrushFeature,
+  offset: Vector2,
+  additionalProperties: AdditionalProperties = {}
+) => {
+  const coordinates = [
+    feature.geometry.coordinates[0].map((point) => {
+      return [point[0] + offset.x, point[1] + offset.y] as Position;
+    })
+  ];
+
+  const { id, ...rest } = additionalProperties;
+
+  const geometry = {
+    ...feature.geometry,
+    coordinates
+  };
+
+  const bbox = calculateBbox(geometry);
+  const center = getBBoxCenter(bbox);
+
+  const properties = {
+    ...feature.properties,
+    position: center,
+    ...rest
+  };
+
+  return {
+    ...feature,
+    id: id ?? generateUUID(),
+    bbox,
+    properties,
+    geometry
   };
 };
 
@@ -37,8 +116,6 @@ export const featureGeometryToLocal = (feature: BrushFeature) => {
 
   const worldBBox = calculateBbox(feature.geometry);
   const center = getBBoxCenter(worldBBox);
-
-  log.debug('worldCenter', center);
 
   const properties = {
     ...feature.properties,
