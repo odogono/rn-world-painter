@@ -5,11 +5,13 @@ import Concaveman from 'concaveman';
 import { runOnJS, runOnUI, useSharedValue } from 'react-native-reanimated';
 
 import { useRemoteLogContext } from '@contexts/RemoteLogContext';
+import { featureGeometryToLocal } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { simplify } from '@helpers/simplify';
-import { Position } from '@types';
-import { featureGeometryToLocal } from '../../helpers/geo';
-import { createBrushFeature } from '../../model/brushFeature';
+import { createBrushFeature } from '@model/brushFeature';
+import { useStore } from '@model/useStore';
+import { useStoreActions } from '@model/useStoreActions';
+import { BrushFeature, Position } from '@types';
 
 const log = createLogger('usePointBrush');
 
@@ -18,16 +20,23 @@ export const usePointBrush = () => {
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<Position[]>([]);
   const hullPath = useSharedValue(Skia.Path.Make());
+
+  const shapeFeature = useSharedValue<BrushFeature | null>(null);
   const rlog = useRemoteLogContext();
+  const { screenToWorld, mViewBBox, screenToWorldPoints } = useStore();
+
+  const { addFeature } = useStoreActions();
 
   const brushSize = useSharedValue(30);
   const brushResolution = useSharedValue(16);
 
   const generateConcaveHull = useCallback((points: Position[]) => {
+    // todo move into BrushFeature
     const outcome = Concaveman(points, 3, 20) as Position[];
 
     // log.debug('[generateConcaveHull] concaveman', outcome.length);
 
+    // todo move into BrushFeature
     const simplified = simplify(outcome, 6, true);
 
     // log.debug('[generateConcaveHull] simplify', simplified.length);
@@ -35,19 +44,28 @@ export const usePointBrush = () => {
     // create a geojson feature
     const feature = createBrushFeature({
       points: simplified,
-      isLocal: true
+      isLocal: false
     });
 
-    featureGeometryToLocal(feature);
+    runOnUI((feature: BrushFeature) => {
+      const points = feature.geometry.coordinates[0];
 
-    // log.debug('[generateConcaveHull] feature', feature);
+      const worldPoints = screenToWorldPoints(points as Position[]);
 
-    runOnUI((hullPoints: Position[]) => {
+      feature.geometry.coordinates[0] = worldPoints;
+
+      shapeFeature.value = feature;
+
+      runOnJS(addFeature)(feature);
+
       hullPath.modify((hullPath) => {
         hullPath.reset();
-        hullPath.moveTo(hullPoints[0][0], hullPoints[0][1]);
-        for (let i = 1; i < hullPoints.length; i++) {
-          hullPath.lineTo(hullPoints[i][0], hullPoints[i][1]);
+
+        const points = feature.geometry.coordinates[0];
+
+        hullPath.moveTo(points[0][0], points[0][1]);
+        for (let ii = 1; ii < points.length; ii++) {
+          hullPath.lineTo(points[ii][0], points[ii][1]);
         }
         hullPath.close();
 
@@ -66,7 +84,7 @@ export const usePointBrush = () => {
         return hullPath;
       });
       // log.debug('generateConcaveHull', outcome);
-    })(simplified);
+    })(feature);
 
     return outcome;
   }, []);
@@ -103,7 +121,7 @@ export const usePointBrush = () => {
   const endBrush = useCallback(() => {
     'worklet';
 
-    runOnJS(log.info)('endBrush', points.value.length);
+    // runOnJS(log.info)('endBrush', points.value.length);
 
     svgPath.modify((path) => {
       path.reset();
@@ -115,5 +133,5 @@ export const usePointBrush = () => {
     points.value = [];
   }, []);
 
-  return { svgPath, addPoint, endBrush, hullPath };
+  return { svgPath, addPoint, endBrush, hullPath, shapeFeature };
 };

@@ -1,4 +1,5 @@
 import { useContext } from 'react';
+import { LayoutRectangle } from 'react-native';
 
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 
@@ -30,6 +31,11 @@ export const useStoreViewDims = () => {
   return useStoreState((state) => ({
     width: state.viewWidth,
     height: state.viewHeight,
+    viewLayout: state.viewLayout,
     setViewDims: state.setViewScreenDims
   }));
+};
+
+export const useStoreViewLayout = (): LayoutRectangle => {
+  return useStoreState((state) => state.viewLayout);
 };

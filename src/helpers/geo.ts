@@ -1,8 +1,25 @@
-import { bbox as calculateBbox } from '@turf/bbox';
-import { BBox, BrushFeature, Position } from '@types';
+import { LayoutRectangle } from 'react-native';
 
-export const getBBoxCenter = (bbox: BBox): Position => {
-  return [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
+import { bbox as calculateBbox } from '@turf/bbox';
+import { BBox, BrushFeature, Position, Vector2 } from '@types';
+import { createLogger } from './log';
+
+const log = createLogger('geo');
+
+export const getBBoxCenter = (bbox: BBox): Vector2 => {
+  return {
+    x: (bbox[0] + bbox[2]) / 2,
+    y: (bbox[1] + bbox[3]) / 2
+  };
+};
+
+export const bboxToLayoutRectangle = (bbox: BBox): LayoutRectangle => {
+  return {
+    x: bbox[0],
+    y: bbox[1],
+    width: bbox[2] - bbox[0],
+    height: bbox[3] - bbox[1]
+  };
 };
 
 /**
@@ -18,8 +35,10 @@ export const featureGeometryToLocal = (feature: BrushFeature) => {
     return feature;
   }
 
-  const bbox = calculateBbox(feature.geometry);
-  const center = getBBoxCenter(bbox);
+  const worldBBox = calculateBbox(feature.geometry);
+  const center = getBBoxCenter(worldBBox);
+
+  log.debug('worldCenter', center);
 
   const properties = {
     ...feature.properties,
@@ -30,17 +49,21 @@ export const featureGeometryToLocal = (feature: BrushFeature) => {
   // translate the geometry to the center
   const coordinates = [
     feature.geometry.coordinates[0].map((point) => {
-      return [point[0] - center[0], point[1] - center[1]] as Position;
+      return [point[0] - center.x, point[1] - center.y] as Position;
     })
   ];
+
+  const geometry = {
+    ...feature.geometry,
+    coordinates
+  };
+
+  const bbox = calculateBbox(geometry);
 
   return {
     ...feature,
     bbox,
     properties,
-    geometry: {
-      ...feature.geometry,
-      coordinates
-    }
+    geometry
   };
 };

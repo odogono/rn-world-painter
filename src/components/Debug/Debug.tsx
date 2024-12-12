@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { makeMutable } from 'react-native-reanimated';
 
-import { Vector2 } from '../../types';
+import { BBox, Vector2 } from '@types';
 import { ReText } from './ReText';
 
 export const debugMsg = makeMutable<string>('▪');
@@ -32,18 +32,28 @@ export const setDebugMsg5 = (msg: string) => {
   debugMsg5.value = msg;
 };
 
-const formatFixed = (value: number) => {
+const formatFixed = (value: number, precision: number = 2) => {
   'worklet';
   if (value < 0) {
-    return value.toFixed(2);
+    return value.toFixed(precision);
   } else {
-    return `+${value.toFixed(2)}`;
+    return `+${value.toFixed(precision)}`;
   }
 };
 
 export const formatVector2 = (value: Vector2) => {
   'worklet';
   return `x: ${formatFixed(value.x)}, y: ${formatFixed(value.y)}`;
+};
+
+export const formatBBox = (value: BBox) => {
+  'worklet';
+  const [minX, minY, maxX, maxY] = value;
+  const x = minX;
+  const y = minY;
+  const w = maxX - minX;
+  const h = maxY - minY;
+  return `x: ${formatFixed(x, 0)}, y: ${formatFixed(y, 0)}, w: ${formatFixed(w, 0)}, h: ${formatFixed(h, 0)}`;
 };
 
 export const Debug = () => {

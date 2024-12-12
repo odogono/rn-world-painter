@@ -9,7 +9,7 @@ import {
 import { useStore } from 'zustand';
 
 import { createLogger } from '@helpers/log';
-import { Vector2 } from '@types';
+import { Position, Vector2 } from '@types';
 import { store, type Store, type StoreProps } from '../Store';
 import {
   CalculateZoomProps,
@@ -118,6 +118,20 @@ export const StoreProvider = ({
     return { x: worldX, y: worldY };
   }, []);
 
+  const screenToWorldPoints = useCallback((points: Position[]): Position[] => {
+    'worklet';
+
+    const [a, b, c, d, e, f] = mViewInverseMatrix.value.get();
+
+    const worldPoints = points.map((point) => {
+      const worldX = a * point[0] + b * point[1] + c;
+      const worldY = d * point[0] + e * point[1] + f;
+      return [worldX, worldY] as Position;
+    });
+
+    return worldPoints;
+  }, []);
+
   const calculateZoom = useCallback((props: CalculateZoomProps) => {
     'worklet';
     // Convert focal point to world coordinates before scaling
@@ -176,6 +190,7 @@ export const StoreProvider = ({
         store: storeRef.current,
         worldToScreen,
         screenToWorld,
+        screenToWorldPoints,
         zoomOnPoint,
         viewLayout
       }}

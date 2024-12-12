@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import type { LayoutRectangle } from 'react-native';
 
-import type { BBox, Mutable, Vector2 } from '@types';
+import type { BBox, Mutable, Position, Vector2 } from '@types';
 import { Store } from '../Store';
 
 export type ZoomOnPointProps = {
@@ -20,7 +20,7 @@ export type StoreContextType = {
   viewLayout: LayoutRectangle;
 
   screenToWorld: (point: Vector2) => Vector2;
-
+  screenToWorldPoints: (points: Position[]) => Position[];
   zoomOnPoint: (props: ZoomOnPointProps) => void;
   worldToScreen: (point: Vector2) => Vector2;
 };

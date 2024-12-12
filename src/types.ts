@@ -21,7 +21,7 @@ export type { BBox } from 'geojson';
 export type Position = [number, number];
 
 export interface BrushFeatureProperties {
-  position: Position;
+  position: Vector2;
   odgnId?: string;
   color: string;
   isLocal?: boolean;
