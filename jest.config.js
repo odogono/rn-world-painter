@@ -4,7 +4,7 @@ const jestConfig = {
     enableGlobally: true
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@shopify/react-native-skia/.*|@sentry/react-native|native-base|react-native-svg)'
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@shopify/react-native-skia/.*|@sentry/react-native|native-base|react-native-svg|polyclip-ts)'
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
 };

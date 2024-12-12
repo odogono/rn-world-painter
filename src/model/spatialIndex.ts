@@ -1,5 +1,6 @@
 import RBush from 'rbush';
 
+import { booleanDisjoint } from '@turf/boolean-disjoint';
 import { BBox, BrushFeature, Rect2, Vector2 } from '@types';
 
 // https://www.npmjs.com/package/@turf/geojson-rbush?activeTab=code
@@ -43,6 +44,25 @@ export class FeatureRBush extends RBush<BrushFeature> {
       maxX,
       maxY
     });
+  }
+
+  findByIntersecting(feature: BrushFeature) {
+    const bboxIntersections = this.findByBBox(feature.bbox!);
+
+    const intersectingFeatures = bboxIntersections.filter(
+      (intersectingFeature) => {
+        return booleanDisjoint(feature, intersectingFeature);
+      }
+    );
+
+    console.log(
+      '[findByIntersecting] intersectingFeatures',
+      intersectingFeatures.length,
+      'bboxIntersections',
+      bboxIntersections.length
+    );
+
+    return bboxIntersections;
   }
 }
 

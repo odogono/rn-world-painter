@@ -56,7 +56,10 @@ export const usePointBrush = () => {
 
       // shapeFeature.value = feature;
 
-      runOnJS(addFeature)(feature, { updateBBox: true });
+      runOnJS(addFeature)(feature, {
+        updateBBox: true,
+        applySubtraction: true
+      });
 
       // hullPath.modify((hullPath) => {
       //   hullPath.reset();
