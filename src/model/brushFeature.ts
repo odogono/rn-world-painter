@@ -9,12 +9,14 @@ export type CreateBrushFeatureOptions = {
   points?: Position[] | GeoJsonPosition[];
   coordinates?: GeoJsonPosition[][];
   isLocal?: boolean;
+  properties?: Partial<BrushFeature['properties']>;
 };
 
 export const createBrushFeature = ({
   isLocal = false,
   points,
-  coordinates
+  coordinates,
+  properties = {}
 }: CreateBrushFeatureOptions): BrushFeature => {
   const geometry: Polygon = {
     type: 'Polygon',
@@ -36,7 +38,8 @@ export const createBrushFeature = ({
     properties: {
       position: center,
       isLocal,
-      color: '#444'
+      color: '#444',
+      ...properties
     },
     geometry
   };

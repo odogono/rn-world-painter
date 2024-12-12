@@ -71,6 +71,68 @@ describe('polyclip', () => {
     expect(result).toEqual([poly1]);
   });
 
+  test('intersecting bbox, but not intersecting features', () => {
+    // L shape
+    const poly1: polyclip.Geom = [
+      [
+        [0, 0],
+        [20, 0],
+        [20, 80],
+        [100, 80],
+        [100, 100],
+        [0, 100],
+        [0, 0]
+      ]
+    ];
+    const poly2: polyclip.Geom = [
+      [
+        [80, 0],
+        [100, 0],
+        [100, 20],
+        [80, 20],
+        [80, 0]
+      ]
+    ];
+
+    const result = polyclip.difference(poly1, poly2);
+
+    expect(result).toEqual([poly1]);
+    expect(JSON.stringify(result) === JSON.stringify([poly1])).toBe(true);
+
+    // console.log(JSON.stringify(result, null, 2));
+  });
+
+  test('if the 2nd feature covers the 1st, the result should be empty', () => {
+    // L shape
+    const poly1: polyclip.Geom = [
+      [
+        [0, 0],
+        [20, 0],
+        [20, 20],
+        [0, 20],
+        [0, 0]
+      ]
+    ];
+    const poly2: polyclip.Geom = [
+      [
+        [-10, -10],
+        [30, -10],
+        [30, 30],
+        [-10, 30],
+        [-10, -10]
+      ]
+    ];
+
+    const result = polyclip.difference(poly1, poly2);
+
+    // expect(result === poly1).toBe(false);
+    // expect(result).toEqual(poly1);
+    // expect(JSON.stringify(result) === JSON.stringify(poly1)).toBe(true);
+
+    expect(result).toEqual([]);
+    // console.log(JSON.stringify(result, null, 2));
+  });
+
   it('should return difference on two features', () => {
     const featureA: BrushFeature = {
       type: 'Feature',
@@ -113,7 +175,5 @@ describe('polyclip', () => {
     };
 
     const result = applyFeatureDifference(featureA, featureB);
-
-    console.log(JSON.stringify(result, null, 2));
   });
 });

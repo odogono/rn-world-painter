@@ -7,8 +7,12 @@ import {
   coordinatesToString
 } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
+import {
+  POLYCLIP_RESULT_UNCHANGED,
+  applyFeatureDifference,
+  applyFeatureIntersection
+} from '@helpers/polyclip';
 import { BBox, BrushFeature } from '@types';
-import { applyFeatureDifference } from '../../helpers/polyclip';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
 
 export type FeatureSliceProps = {
@@ -48,45 +52,32 @@ export const createFeatureSlice: StateCreator<
 
   addFeature: (feature: BrushFeature, options: AddFeatureOptions = {}) => {
     set((state) => {
-      let features = [...state.features];
+      const features = [...state.features];
 
       if (options.updateBBox) {
         feature.bbox = calculateBBox(feature.geometry);
       }
 
       if (options.applySubtraction) {
-        const intersectingFeatures =
-          state.spatialIndex.findByIntersecting(feature);
+        const timeMs = performance.now();
 
-        if (intersectingFeatures.length) {
-          log.debug(
-            '[addFeature] applySubtraction intersecting:',
-            intersectingFeatures.length
-          );
+        const [addedCount, removedCount, updatedFeatures] = applySubtraction(
+          feature,
+          state.spatialIndex,
+          features
+        );
 
-          const newFeatures = applySubtractionToFeatures(
-            feature,
-            intersectingFeatures
-          );
+        log.debug(
+          '[addFeature] applySubtraction added',
+          addedCount,
+          'removed',
+          removedCount,
+          'new features',
+          performance.now() - timeMs
+        );
 
-          log.debug(
-            '[addFeature] applySubtraction',
-            newFeatures.length,
-            'new features'
-          );
-
-          // remote the existing features
-          intersectingFeatures.forEach((feature) => {
-            state.spatialIndex.remove(feature);
-            features = features.filter((f) => f.id !== feature.id);
-          });
-
-          newFeatures.forEach((feature) => {
-            state.spatialIndex.insert(feature);
-            features.push(feature);
-          });
-
-          return { ...state, features };
+        if (addedCount > 0 || removedCount > 0) {
+          return { ...state, features: updatedFeatures };
         }
       }
 
@@ -117,30 +108,65 @@ export const createFeatureSlice: StateCreator<
       return [];
     }
 
-    // log.debug('[getVisibleFeatures] bbox', bbox);
-
-    // get().features.forEach((feature) => {
-    //   log.debug('[getVisibleFeatures] feature', feature.id, feature.bbox);
-    // });
-
-    const result = get().spatialIndex.findByBBox(bbox);
-
-    // log.debug('[getVisibleFeatures] result', result);
-
-    return result;
+    return get().spatialIndex.findByBBox(bbox);
   }
 });
 
-const applySubtractionToFeatures = (
-  srcFeature: BrushFeature,
-  dstFeatures: BrushFeature[]
-) => {
-  const result: BrushFeature[] = [];
+const applySubtraction = (
+  brush: BrushFeature,
+  spatialIndex: FeatureRBush,
+  features: BrushFeature[]
+): [number, number, BrushFeature[]] => {
+  const intersectingFeatures = spatialIndex.findByIntersecting(brush);
 
-  dstFeatures.forEach((dstFeature) => {
-    const features = applyFeatureDifference(srcFeature, dstFeature);
-    result.push(...features);
+  if (!intersectingFeatures.length) {
+    return [0, 0, features];
+  }
+
+  const removeFeatures: BrushFeature[] = [];
+  const newFeatures: BrushFeature[] = [];
+
+  intersectingFeatures.forEach((feature) => {
+    const [result, features] = applyFeatureDifference(feature, brush);
+    log.debug('[applySubtraction] applyFeatureDifference', result);
+    if (result !== POLYCLIP_RESULT_UNCHANGED) {
+      removeFeatures.push(feature);
+    }
+    newFeatures.push(...features);
   });
 
-  return result;
+  log.debug('[applySubtraction] removeFeatures', removeFeatures.length);
+  log.debug('[applySubtraction] newFeatures', newFeatures.length);
+
+  if (newFeatures.length === 0 && removeFeatures.length === 0) {
+    return [0, 0, features];
+  }
+
+  // remote the existing features
+  removeFeatures.forEach((feature) => {
+    spatialIndex.remove(feature);
+    features = features.filter((f) => f.id !== feature.id);
+  });
+
+  // add the new features
+  newFeatures.forEach((feature) => {
+    spatialIndex.insert(feature);
+    features.push(feature);
+  });
+
+  return [newFeatures.length, removeFeatures.length, features];
 };
+
+// const applySubtractionToFeatures = (
+//   srcFeature: BrushFeature,
+//   dstFeatures: BrushFeature[]
+// ) => {
+//   const result: BrushFeature[] = [];
+
+//   dstFeatures.forEach((dstFeature) => {
+//     const features = applyFeatureDifference(dstFeature, srcFeature);
+//     result.push(...features);
+//   });
+
+//   return result;
+// };

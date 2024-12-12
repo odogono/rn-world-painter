@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Group, Path, SkPath, Skia } from '@shopify/react-native-skia';
+import { Polygon } from 'geojson';
 import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 
 import { createLogger } from '@helpers/log';
@@ -71,18 +72,28 @@ const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
 
   const color = shape.properties.color ?? '#444';
 
-  return <Path path={path} color={color} />;
+  return <Path path={path} color={color} style='stroke' strokeWidth={2} />;
 };
 
 const applyBrushFeatureToPath = (shape: BrushFeature, path: SkPath) => {
-  const points = shape.geometry.coordinates[0];
+  const coordinates = shape.geometry.coordinates;
+  // const points = shape.geometry.coordinates[0];
 
-  path.reset();
-  path.moveTo(points[0][0], points[0][1]);
-  for (let ii = 1; ii < points.length; ii++) {
-    path.lineTo(points[ii][0], points[ii][1]);
+  // path.reset();
+  // path.moveTo(points[0][0], points[0][1]);
+  // for (let ii = 1; ii < points.length; ii++) {
+  //   path.lineTo(points[ii][0], points[ii][1]);
+  // }
+  // path.close();
+
+  for (let pp = 0; pp < coordinates.length; pp++) {
+    const points = coordinates[pp];
+    path.moveTo(points[0][0], points[0][1]);
+    for (let ii = 1; ii < points.length; ii++) {
+      path.lineTo(points[ii][0], points[ii][1]);
+    }
+    path.close();
   }
-  path.close();
 
   return path;
 };
