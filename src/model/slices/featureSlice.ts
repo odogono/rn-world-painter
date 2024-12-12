@@ -21,9 +21,18 @@ export type FeatureSliceProps = {
   spatialIndex: FeatureRBush;
 };
 
+export const ApplyOperation = {
+  ADD: 'add',
+  SUBTRACT: 'subtract',
+  INTERSECT: 'intersect'
+} as const;
+
+export type ApplyOperation =
+  (typeof ApplyOperation)[keyof typeof ApplyOperation];
+
 export type AddFeatureOptions = {
   updateBBox?: boolean;
-  applySubtraction?: boolean;
+  applyOperation?: ApplyOperation;
 };
 
 export type FeatureSliceActions = {
@@ -58,7 +67,7 @@ export const createFeatureSlice: StateCreator<
         feature.bbox = calculateBBox(feature.geometry);
       }
 
-      if (options.applySubtraction) {
+      if (options.applyOperation === ApplyOperation.SUBTRACT) {
         const timeMs = performance.now();
 
         const [addedCount, removedCount, updatedFeatures] = applySubtraction(

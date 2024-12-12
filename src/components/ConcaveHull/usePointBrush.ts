@@ -9,6 +9,7 @@ import { featureGeometryToLocal } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { simplify } from '@helpers/simplify';
 import { createBrushFeature } from '@model/brushFeature';
+import { ApplyOperation } from '@model/slices/featureSlice';
 import { useStore } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BrushFeature, Position } from '@types';
@@ -37,7 +38,7 @@ export const usePointBrush = () => {
     // log.debug('[generateConcaveHull] concaveman', outcome.length);
 
     // todo move into BrushFeature
-    const simplified = simplify(outcome, 6, true);
+    const simplified = outcome; //simplify(outcome, 6, true);
 
     // log.debug('[generateConcaveHull] simplify', simplified.length);
 
@@ -54,39 +55,10 @@ export const usePointBrush = () => {
 
       feature.geometry.coordinates[0] = worldPoints;
 
-      // shapeFeature.value = feature;
-
       runOnJS(addFeature)(feature, {
         updateBBox: true,
-        applySubtraction: true
+        applyOperation: ApplyOperation.SUBTRACT
       });
-
-      // hullPath.modify((hullPath) => {
-      //   hullPath.reset();
-
-      //   const points = feature.geometry.coordinates[0];
-
-      //   hullPath.moveTo(points[0][0], points[0][1]);
-      //   for (let ii = 1; ii < points.length; ii++) {
-      //     hullPath.lineTo(points[ii][0], points[ii][1]);
-      //   }
-      //   hullPath.close();
-
-      //   // const bounds = hullPath.computeTightBounds();
-
-      //   // hullPath.toCmds();
-
-      //   // runOnJS(log.debug)('hullPath', hullPath.toCmds());
-
-      //   // runOnJS(rlog.sendSVGPath)({
-      //   //   name: 'hull',
-      //   //   bounds,
-      //   //   path: hullPath.toSVGString()
-      //   // });
-
-      //   return hullPath;
-      // });
-      // log.debug('generateConcaveHull', outcome);
     })(feature);
 
     return outcome;

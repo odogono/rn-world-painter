@@ -10,6 +10,25 @@ const log = createLogger('polyclip');
 export const POLYCLIP_RESULT_REMOVED = -1;
 export const POLYCLIP_RESULT_UNCHANGED = 0;
 
+export const applyFeatureUnion = (
+  featureA: BrushFeature,
+  featureB: BrushFeature
+) => {
+  const poly1: Geom = featureA.geometry.coordinates as Geom;
+  const poly2: Geom = featureB.geometry.coordinates as Geom;
+
+  const diff = polyclip.union(poly1, poly2);
+
+  const result: BrushFeature[] = [];
+
+  diff.forEach((poly) => {
+    const feature = createBrushFeature({ coordinates: poly });
+    result.push(feature);
+  });
+
+  return result;
+};
+
 export const applyFeatureDifference = (
   featureA: BrushFeature,
   featureB: BrushFeature

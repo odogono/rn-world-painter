@@ -65,8 +65,9 @@ export const MiniMap = () => {
   );
 
   const groupMatrix = useDerivedValue(() => {
+    const { width, height } = viewLayout;
     const m = Skia.Matrix();
-    m.translate(viewLayout.width / 2, viewLayout.height / 2);
+    m.translate(width - width / 6, height / 6);
     m.scale(0.2, 0.2);
     return m;
   });
@@ -74,6 +75,7 @@ export const MiniMap = () => {
   return (
     <>
       <Group matrix={groupMatrix}>
+        <Guidelines viewLayout={viewLayout} />
         <Path path={viewportPath} strokeWidth={1} style='stroke' color='#F00' />
         {features.map((shape) => (
           <ShapeComponent key={shape.id} shape={shape} />

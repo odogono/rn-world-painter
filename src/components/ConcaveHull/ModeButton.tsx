@@ -1,9 +1,6 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
-
-type Mode = 'draw' | 'move';
 
 export const ModeButton = ({
   isWorldMoveEnabled,
@@ -12,12 +9,6 @@ export const ModeButton = ({
   isWorldMoveEnabled: boolean;
   onPress: () => void;
 }) => {
-  // const [mode, setMode] = useState<Mode>('draw');
-
-  // const toggleMode = () => {
-  //   setMode(mode === 'draw' ? 'move' : 'draw');
-  // };
-
   return (
     <Pressable style={styles.modeButton} onPress={onPress}>
       <MaterialIcons
@@ -47,8 +38,6 @@ const styles = StyleSheet.create({
       height: 2
     },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    borderWidth: 2,
-    borderColor: 'black'
+    shadowRadius: 3.84
   }
 });
