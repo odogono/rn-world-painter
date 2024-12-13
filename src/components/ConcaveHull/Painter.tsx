@@ -22,6 +22,7 @@ import {
   setDebugMsg2,
   setDebugMsg3
 } from '@components/Debug/Debug';
+import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
 import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import {
@@ -119,7 +120,7 @@ export const Painter = () => {
         </Canvas>
       </GestureDetector>
 
-      <ModeButton
+      <FlowerMenu
         isWorldMoveEnabled={isWorldMoveEnabled}
         onPress={() => setIsWorldMoveEnabled(!isWorldMoveEnabled)}
       />

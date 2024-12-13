@@ -37,6 +37,7 @@
     "expo-system-ui": "~4.0.6",
     "expo-web-browser": "~14.0.1",
     "its-fine": "^1.2.5",
+    "mitt": "^3.0.1",
     "phoenix": "^1.7.18",
     "polyclip-ts": "^0.16.7",
     "rbush": "^4.0.1",
