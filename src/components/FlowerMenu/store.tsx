@@ -12,6 +12,7 @@ type Node = {
   id: string;
   name: string;
   icon?: string;
+  openOnFocus?: boolean;
   children?: Node[];
 };
 
@@ -20,11 +21,6 @@ const data: Node[] = [
     id: 'root',
     name: 'root',
     children: [
-      {
-        id: 'edit',
-        name: 'Edit',
-        icon: 'edit'
-      },
       {
         id: 'move',
         name: 'Move',
@@ -52,8 +48,14 @@ const data: Node[] = [
         ]
       },
       {
+        id: 'edit',
+        name: 'Edit',
+        icon: 'edit'
+      },
+      {
         id: 'history',
         name: 'History',
+        openOnFocus: true,
         children: [
           {
             id: 'undo',

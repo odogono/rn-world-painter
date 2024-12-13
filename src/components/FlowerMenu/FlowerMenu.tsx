@@ -1,11 +1,7 @@
 import { useEffect } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
-
-import { MaterialIcons } from '@expo/vector-icons';
-import { createLogger } from '../../helpers/log';
+import { createLogger } from '@helpers/log';
 import { FlowerNodeComponent } from './FlowerNodeComponent';
 import {
   FlowerMenuStoreProvider,
@@ -42,13 +38,21 @@ export const FlowerMenu = ({
 
 const FlowerMenuContainer = () => {
   const nodeIds = useMenuStore().use.getChildNodeIds()();
-  const selectedNodeIds = useFlowerMenuStore((s) => s.selectedNodeId);
+  const selectedNodeIds = useFlowerMenuStore((s) => s.nodes);
+  // const ns = useFlowerMenuStore((s) => s.nodes);
 
   useEffect(() => {
-    log.debug('FlowerMenuContainer', selectedNodeIds);
-  }, [selectedNodeIds]);
+    nodeIds.forEach((id) => {
+      const selected = selectedNodeIds[id];
+      log.debug(
+        'FlowerMenuContainer',
+        id,
+        selected.children[selected.selectedChild]
+      );
+    });
+  }, [nodeIds, selectedNodeIds]);
 
-  log.debug('FlowerMenuContainer rendered', nodeIds);
+  // log.debug('FlowerMenuContainer rendered', nodeIds);
   return (
     <View style={styles.container}>
       {nodeIds.map((id) => (

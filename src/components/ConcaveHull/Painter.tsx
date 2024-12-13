@@ -23,6 +23,7 @@ import {
   setDebugMsg3
 } from '@components/Debug/Debug';
 import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
+import { useEvents } from '@contexts/Events';
 import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import {
@@ -47,6 +48,18 @@ export const Painter = () => {
   const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
 
   const { addFeature, resetFeatures } = useStoreActions();
+
+  const events = useEvents();
+
+  useEffect(() => {
+    const handler = (event: any) => {
+      log.debug('event', event);
+    };
+    events?.on('*', handler);
+    return () => {
+      events?.off('*', handler);
+    };
+  }, [events]);
 
   useEffect(() => {
     addFeature(testFeature as BrushFeature);

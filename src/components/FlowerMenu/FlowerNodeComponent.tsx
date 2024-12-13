@@ -30,11 +30,11 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
 
   // const nodeState = useMenuStore().use.getNodeState()(nodeId);
   const nodeIcon = useMenuStore().use.getNodeIcon()(nodeId);
-  const handleNodeTap = useMenuStore().use.handleNodeTap();
+  const handleNodeTap = useMenuStore().use.handleNodeSelect();
 
-  useEffect(() => {
-    log.debug('ns changed', nodeId, ns);
-  }, [ns]);
+  // useEffect(() => {
+  //   log.debug('ns changed', nodeId, ns);
+  // }, [ns]);
   // useEffect(() => {
   //   log.debug('nodeState changed', nodeId, nodeState);
   // }, [nodeState]);
