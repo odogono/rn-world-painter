@@ -2,10 +2,22 @@ import { createContext, useContext, useState } from 'react';
 
 import { createStore, useStore } from 'zustand';
 
+import { createLogger } from '@helpers/log';
+import { createSelectors, type WithSelectors } from '@helpers/zustand';
 import { Vector2 } from '@types';
 
-const data = {
-  root: {
+const log = createLogger('FlowerMenuStore');
+
+type Node = {
+  id: string;
+  name: string;
+  icon?: string;
+  children?: Node[];
+};
+
+const data: Node[] = [
+  {
+    id: 'root',
     name: 'root',
     children: [
       {
@@ -59,12 +71,49 @@ const data = {
       }
     ]
   }
+];
+
+const findNodeById = (nodes: Node[], id: string): Node | undefined => {
+  for (const node of nodes) {
+    if (node.id === id) {
+      return node;
+    }
+    if (node.children) {
+      const result = findNodeById(node.children, id);
+      if (result) {
+        return result;
+      }
+    }
+  }
+  return undefined;
 };
 
-export type FlowerNode = {
+const getChildNodeIds = (nodes: Node[], nodeId?: string): string[] => {
+  if (!nodeId) {
+    return (
+      findNodeById(nodes, 'root')?.children?.map((child) => child.id) ?? []
+    );
+  }
+  const children = findNodeById(nodes, nodeId)?.children ?? [];
+  return children.map((child) => child.id);
+};
+
+const createNodeState = (node: Node): NodeState => {
+  return {
+    id: node.id,
+    name: node.name,
+    icon: node.icon,
+    position: { x: 0, y: 0 },
+    selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
+    children: node.children?.map((child) => child.id) ?? [],
+    isOpen: false
+  };
+};
+
+export type NodeState = {
   id: string;
   name: string;
-  icon: string;
+  icon?: string;
   position: Vector2;
   selectedChild: number;
   children: string[];
@@ -72,69 +121,113 @@ export type FlowerNode = {
 };
 
 export interface FlowerMenuStoreProps {
-  rootNodes: FlowerNode[];
+  nodes: Record<string, NodeState>;
 }
 
 export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
   initialise: () => void;
   open: (nodeId: string) => void;
+
+  getNodeState: (nodeId: string) => NodeState | undefined;
+  getNodeIcon: (nodeId: string) => string | undefined;
+  getChildNodeIds: (nodeId?: string) => string[];
+  handleNodeTap: (nodeId: string) => void;
+  handleNodeLongPress: (nodeId: string) => void;
 }
 
 const defaultProps: FlowerMenuStoreProps = {
-  rootNodes: []
+  nodes: {}
 };
 
-type FlowerMenuStore = ReturnType<typeof createFlowerMenuStore>;
+export type FlowerMenuStore = ReturnType<typeof createFlowerMenuStore>;
 
 export const createFlowerMenuStore = (
   props?: Partial<FlowerMenuStoreProps>
 ) => {
-  return createStore<FlowerMenuStoreState>()((set) => ({
+  // vanilla store
+  return createStore<FlowerMenuStoreState>()((set, get) => ({
     ...defaultProps,
     ...props,
 
-    initialise: () => {
-      // set({
-      //   rootNodes: data.root.children.map((node) => ({
-      //     ...node,
-      //     isOpen: false
-      //   }))
-      // });
+    initialise: () => {},
+    getChildNodeIds: (nodeId?: string) => {
+      return getChildNodeIds(data, nodeId);
     },
-    open: (nodeId: string) => {}
+    getNodeState: (nodeId: string) => {
+      const node = get().nodes[nodeId];
+      if (node) {
+        return node;
+      }
+
+      const dataNode = findNodeById(data, nodeId);
+
+      if (!dataNode) {
+        throw new Error(`Node ${nodeId} not found`);
+      }
+
+      const nodeState = createNodeState(dataNode);
+      set((prev) => ({ nodes: { ...prev.nodes, [nodeId]: nodeState } }));
+      return nodeState;
+      // return get().rootNodes.find((node) => node.id === nodeId);
+    },
+
+    getNodeIcon: (nodeId: string) => {
+      const node = get().getNodeState(nodeId);
+
+      if (!node) {
+        throw new Error(`Undefined Node ${nodeId}`);
+      }
+
+      if (node?.icon) {
+        return node.icon;
+      }
+
+      const { selectedChild, children } = node;
+
+      // log.debug(
+      //   'getNodeIcon',
+      //   nodeId,
+      //   'selectedChild',
+      //   selectedChild,
+      //   children[selectedChild]
+      // );
+
+      if (selectedChild >= 0 && selectedChild < children.length) {
+        return get().getNodeIcon(children[selectedChild]);
+      }
+
+      return undefined;
+    },
+
+    open: (nodeId: string) => {},
+    handleNodeTap: (nodeId: string) =>
+      set((state) => {
+        // log.debug('handleNodeTap', nodeId);
+
+        const nodeState = state.getNodeState(nodeId);
+
+        if (!nodeState) {
+          throw new Error(`Node ${nodeId} not found`);
+        }
+
+        const { selectedChild, children } = nodeState;
+
+        return {
+          ...state,
+          nodes: {
+            ...state.nodes,
+            [nodeId]: {
+              ...nodeState,
+              selectedChild: (selectedChild + 1) % children.length
+            }
+          }
+        };
+        // change the state to the next child, or activate if it has no children
+
+        // return state;
+      }),
+    handleNodeLongPress: (nodeId: string) => {
+      log.debug('handleNodeLongPress', nodeId);
+    }
   }));
-};
-
-export const FlowerMenuStoreContext = createContext<FlowerMenuStore | null>(
-  null
-);
-
-type FlowerMenuStoreProviderProps = React.PropsWithChildren<
-  Partial<FlowerMenuStoreProps>
->;
-
-export const FlowerMenuStoreProvider = ({
-  children,
-  ...props
-}: FlowerMenuStoreProviderProps) => {
-  const [store, setStore] = useState<FlowerMenuStore | null>(null);
-
-  if (store === null) {
-    const newStore = createFlowerMenuStore(props);
-    setStore(newStore);
-  }
-
-  return (
-    <FlowerMenuStoreContext.Provider value={store}>
-      {children}
-    </FlowerMenuStoreContext.Provider>
-  );
-};
-
-export const useFlowerMenuStore = <T,>(
-  selector: (state: FlowerMenuStoreState) => T
-): T => {
-  const store = useContext(FlowerMenuStoreContext);
-  if (!store) throw new Error('FlowerMenuStoreProvider not found');
-  return useStore(store, selector);
 };

@@ -1,18 +1,18 @@
 import { Dimensions, StyleSheet, View } from 'react-native';
 
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle } from 'react-native-reanimated';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { createLogger } from '@helpers/log';
-import { FlowerNode } from './store';
+import { useFlowerMenuStore, useMenuStore } from './storeContext';
 
 const { width, height } = Dimensions.get('window');
 
-const log = createLogger('FlowerNode');
+const log = createLogger('FlowerNodeComponent');
 
 export type FlowerNodeComponentProps = {
-  node: FlowerNode;
+  nodeId: string;
 };
 
 /**
@@ -24,14 +24,17 @@ export type FlowerNodeComponentProps = {
  * @param param0
  * @returns
  */
-export const FlowerNodeComponent = ({ node }: FlowerNodeComponentProps) => {
-  const { icon } = node;
+export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
+  const handleNodeTap = useFlowerMenuStore((s) => s.handleNodeTap);
+  // const getNodeState = useFlowerMenuStore((s) => s.getNodeState);
+  const nodeState = useMenuStore().use.getNodeState()(nodeId);
+
+  // const { icon } = node;
 
   const singleTap = Gesture.Tap()
     .maxDuration(250)
     .onStart(() => {
-      'worklet';
-      runOnJS(log.debug)('single tap');
+      runOnJS(handleNodeTap)(nodeState?.id ?? '');
     });
 
   const doubleTap = Gesture.Tap()
@@ -53,15 +56,27 @@ export const FlowerNodeComponent = ({ node }: FlowerNodeComponentProps) => {
 
   const gesture = Gesture.Exclusive(doubleTap, singleTap, longPress);
 
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      // transform: [{ scale: getNodeState(node.id)?.isOpen ? 1 : 0.5 }]
+      transform: [{ scale: 1 }]
+    };
+  });
+
+  if (!nodeState) return null;
+
+  log.debug('FlowerNodeComponent', nodeState);
+  const { icon } = nodeState;
+
   return (
     <GestureDetector gesture={gesture}>
-      <View style={styles.modeButton}>
+      <Animated.View style={[styles.modeButton, animatedStyle]}>
         <MaterialIcons
           name={icon as keyof typeof MaterialIcons.glyphMap}
           size={24}
           color='black'
         />
-      </View>
+      </Animated.View>
     </GestureDetector>
   );
 };

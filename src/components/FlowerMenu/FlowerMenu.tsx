@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -6,7 +7,11 @@ import { runOnJS } from 'react-native-reanimated';
 import { MaterialIcons } from '@expo/vector-icons';
 import { createLogger } from '../../helpers/log';
 import { FlowerNodeComponent } from './FlowerNodeComponent';
-import { FlowerMenuStoreProvider, useFlowerMenuStore } from './store';
+import {
+  FlowerMenuStoreProvider,
+  useFlowerMenuStore,
+  useMenuStore
+} from './storeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,12 +41,19 @@ export const FlowerMenu = ({
 };
 
 const FlowerMenuContainer = () => {
-  const rootNodes = useFlowerMenuStore((s) => s.rootNodes);
+  // const rootNodes = useFlowerMenuStore((s) => s.rootNodes);
+  const initialise = useFlowerMenuStore((s) => s.initialise);
+  const nodeIds = useMenuStore().use.getChildNodeIds()();
+
+  useEffect(() => {
+    log.debug('FlowerMenuContainer');
+    initialise();
+  }, []);
 
   return (
     <View style={styles.container}>
-      {rootNodes.map((node) => (
-        <FlowerNodeComponent node={node} />
+      {nodeIds.map((id) => (
+        <FlowerNodeComponent key={id} nodeId={id} />
       ))}
     </View>
   );
