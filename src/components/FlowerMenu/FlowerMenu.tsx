@@ -41,15 +41,14 @@ export const FlowerMenu = ({
 };
 
 const FlowerMenuContainer = () => {
-  // const rootNodes = useFlowerMenuStore((s) => s.rootNodes);
-  const initialise = useFlowerMenuStore((s) => s.initialise);
   const nodeIds = useMenuStore().use.getChildNodeIds()();
+  const selectedNodeIds = useFlowerMenuStore((s) => s.selectedNodeId);
 
   useEffect(() => {
-    log.debug('FlowerMenuContainer');
-    initialise();
-  }, []);
+    log.debug('FlowerMenuContainer', selectedNodeIds);
+  }, [selectedNodeIds]);
 
+  log.debug('FlowerMenuContainer rendered', nodeIds);
   return (
     <View style={styles.container}>
       {nodeIds.map((id) => (

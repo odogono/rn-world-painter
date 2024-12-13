@@ -26,12 +26,24 @@ describe('FlowerMenuStore', () => {
     expect(state.nodes).toEqual(customRootNodes);
   });
 
+  it('should initialise from static data', () => {
+    const store = createFlowerMenuStore();
+    store.getState().initialise();
+    const state = store.getState();
+
+    expect(state.nodes.root.children).toEqual(['edit', 'move', 'history']);
+  });
+
   it('should get child node ids', () => {
     const store = createFlowerMenuStore();
+    store.getState().initialise();
     const state = store.getState();
 
     // Root level nodes
-    const rootChildren = state.getChildNodeIds();
+    const topLevelChildren = state.getChildNodeIds();
+    expect(topLevelChildren).toEqual(['root']);
+
+    const rootChildren = state.getChildNodeIds('root');
     expect(rootChildren).toEqual(['edit', 'move', 'history']);
 
     // Move submenu children
@@ -64,19 +76,20 @@ describe('FlowerMenuStore', () => {
     const store = createFlowerMenuStore();
     store.getState().initialise();
 
-    // expect(rootNode?.selectedChild).toEqual(0);
+    // initial state
+    expect(store.getState().getNodeIcon('root')).toEqual('edit');
 
     // Initial tap
-    store.getState().handleNodeTap('root');
+    store.getState().handleNodeSelect('root');
 
     // Verify the state changes after tap
-    expect(store.getState().getNodeIcon('root')).toEqual('open_with');
+    expect(store.getState().getNodeIcon('root')).toEqual('pan-tool');
 
-    store.getState().handleNodeTap('root');
-    expect(store.getState().getNodeIcon('root')).toEqual('history');
+    store.getState().handleNodeSelect('root');
+    expect(store.getState().getNodeIcon('root')).toEqual('undo');
 
     // back to first child
-    store.getState().handleNodeTap('root');
+    store.getState().handleNodeSelect('root');
     expect(store.getState().getNodeIcon('root')).toEqual('edit');
   });
 });

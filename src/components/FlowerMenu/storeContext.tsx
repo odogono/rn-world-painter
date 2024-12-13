@@ -27,6 +27,7 @@ export const FlowerMenuStoreProvider = ({
 
   if (store === null) {
     const newStore = createSelectors(createFlowerMenuStore(props));
+    newStore.getState().initialise();
     setStore(newStore);
   }
 

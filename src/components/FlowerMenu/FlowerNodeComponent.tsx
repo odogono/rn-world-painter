@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -25,16 +26,23 @@ export type FlowerNodeComponentProps = {
  * @returns
  */
 export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
-  const handleNodeTap = useFlowerMenuStore((s) => s.handleNodeTap);
-  // const getNodeState = useFlowerMenuStore((s) => s.getNodeState);
-  const nodeState = useMenuStore().use.getNodeState()(nodeId);
+  const ns = useFlowerMenuStore((s) => s.nodes[nodeId]);
 
-  // const { icon } = node;
+  // const nodeState = useMenuStore().use.getNodeState()(nodeId);
+  const nodeIcon = useMenuStore().use.getNodeIcon()(nodeId);
+  const handleNodeTap = useMenuStore().use.handleNodeTap();
+
+  useEffect(() => {
+    log.debug('ns changed', nodeId, ns);
+  }, [ns]);
+  // useEffect(() => {
+  //   log.debug('nodeState changed', nodeId, nodeState);
+  // }, [nodeState]);
 
   const singleTap = Gesture.Tap()
     .maxDuration(250)
     .onStart(() => {
-      runOnJS(handleNodeTap)(nodeState?.id ?? '');
+      runOnJS(handleNodeTap)(nodeId);
     });
 
   const doubleTap = Gesture.Tap()
@@ -63,16 +71,15 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
     };
   });
 
-  if (!nodeState) return null;
+  // if (!nodeState) return null;
 
-  log.debug('FlowerNodeComponent', nodeState);
-  const { icon } = nodeState;
+  log.debug('FlowerNodeComponent', nodeId, ns.selectedChild);
 
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.modeButton, animatedStyle]}>
         <MaterialIcons
-          name={icon as keyof typeof MaterialIcons.glyphMap}
+          name={nodeIcon as keyof typeof MaterialIcons.glyphMap}
           size={24}
           color='black'
         />
