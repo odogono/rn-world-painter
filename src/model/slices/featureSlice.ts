@@ -13,12 +13,19 @@ import {
   applyFeatureIntersection,
   applyFeatureUnion
 } from '@helpers/polyclip';
-import { BBox, BrushFeature } from '@types';
+import { BBox, BrushFeature, Vector2 } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
 
 export type FeatureSliceProps = {
   features: BrushFeature[];
   spatialIndex: FeatureRBush;
+  selectedFeatures: string[];
+};
+
+const defaultState: FeatureSliceProps = {
+  features: [],
+  spatialIndex: createSpatialIndex(),
+  selectedFeatures: []
 };
 
 export const ApplyOperation = {
@@ -40,15 +47,11 @@ export type FeatureSliceActions = {
   removeFeature: (feature: BrushFeature) => void;
   resetFeatures: () => void;
   getVisibleFeatures: (bbox: BBox) => BrushFeature[];
+
+  handleTap: (point: Vector2) => void;
 };
 
 export type FeatureSlice = FeatureSliceProps & FeatureSliceActions;
-
-const defaultState: FeatureSliceProps = {
-  brushMode: ApplyOperation.ADD,
-  features: [],
-  spatialIndex: createSpatialIndex()
-};
 
 const log = createLogger('featureSlice');
 
@@ -137,7 +140,45 @@ export const createFeatureSlice: StateCreator<
     }
 
     return get().spatialIndex.findByBBox(bbox);
-  }
+  },
+
+  handleTap: (point: Vector2) =>
+    set((state) => {
+      log.debug('[handleTap]', point);
+
+      const featureIds = get()
+        .spatialIndex.findByPosition(point)
+        .map((f) => f.id!) as string[];
+      log.debug('[handleTap] featureIds', featureIds);
+
+      // state.selectedFeatures = features;
+      let selectedFeatures = [...state.selectedFeatures];
+
+      featureIds.forEach((featureId) => {
+        if (selectedFeatures.includes(featureId)) {
+          selectedFeatures = selectedFeatures.filter((f) => f !== featureId);
+        } else {
+          selectedFeatures.push(featureId);
+        }
+      });
+
+      return { ...state, selectedFeatures };
+
+      // const updatedFeatures = state.features.map((feature) => {
+      //   const isTapped = features.includes(feature.id);
+      //   let isSelected = feature.properties.isSelected;
+      //   if (isTapped) {
+      //     isSelected = !isSelected;
+      //   }
+
+      //   return {
+      //     ...feature,
+      //     properties: { ...feature.properties, isSelected }
+      //   };
+      // });
+
+      // return { ...state, features: updatedFeatures };
+    })
 });
 
 const applyAddition = (

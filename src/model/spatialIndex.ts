@@ -64,6 +64,15 @@ export class FeatureRBush extends RBush<BrushFeature> {
 
     return bboxIntersections;
   }
+
+  findByPosition(position: Vector2) {
+    return this.search({
+      minX: position.x,
+      minY: position.y,
+      maxX: position.x,
+      maxY: position.y
+    });
+  }
 }
 
 export const createSpatialIndex = (): FeatureRBush => {

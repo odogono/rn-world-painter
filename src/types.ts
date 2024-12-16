@@ -25,6 +25,7 @@ export interface BrushFeatureProperties {
   odgnId?: string;
   color: string;
   isLocal?: boolean;
+  isSelected?: boolean;
 }
 
 export type BrushFeature = Feature<Polygon, BrushFeatureProperties>;

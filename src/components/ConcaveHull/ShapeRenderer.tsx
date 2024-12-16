@@ -36,9 +36,11 @@ export const ShapeRenderer = () => {
     const visibleFeatures = getVisibleFeatures(bbox);
 
     const visibleIds = visibleFeatures
-      .map((feature) => feature.id)
+      .map((feature) => feature.id + (feature.properties.isSelected ? 'S' : ''))
       .filter(Boolean)
       .join('|');
+
+    log.debug('[updateVisibleFeatures] visibleIds', visibleIds);
 
     if (visibleIds !== visibleTileIdsRef.current) {
       visibleTileIdsRef.current = visibleIds;
@@ -70,7 +72,9 @@ const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
     return p;
   }, [shape]);
 
-  const color = shape.properties.color ?? '#444';
+  const isSelected = shape.properties.isSelected;
+
+  const color = isSelected ? '#00F' : (shape.properties.color ?? '#444');
 
   return <Path path={path} color={color} style='stroke' strokeWidth={2} />;
 };

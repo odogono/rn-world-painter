@@ -10,9 +10,11 @@ import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
 import { createLogger } from '@helpers/log';
 import { useStore } from '@model/useStore';
+import { Vector2 } from '@types';
 
 export type UseGestureProps = {
   isWorldMoveEnabled?: boolean;
+  onTap: (point: Vector2) => void;
   onUpdate: (point: SkPoint) => void;
   onEnd?: () => void | undefined;
 };
@@ -22,7 +24,8 @@ const log = createLogger('useGesture');
 export const useGesture = ({
   isWorldMoveEnabled = false,
   onUpdate,
-  onEnd
+  onEnd,
+  onTap
 }: UseGestureProps) => {
   const {
     mViewPosition,
@@ -35,6 +38,14 @@ export const useGesture = ({
 
   const startScale = useSharedValue(1);
   const startPosition = useSharedValue({ x: 0, y: 0 });
+
+  const singleTap = Gesture.Tap()
+    .maxDuration(250)
+    .onStart(({ x, y }) => {
+      const worldPos = screenToWorld({ x, y });
+
+      runOnJS(onTap)(worldPos);
+    });
 
   const pan = useMemo(
     () =>
@@ -127,9 +138,9 @@ export const useGesture = ({
   );
 
   if (isWorldMoveEnabled) {
-    return Gesture.Simultaneous(pan, pinchGesture);
+    return Gesture.Simultaneous(singleTap, pan, pinchGesture);
   } else {
-    return pan;
+    return Gesture.Exclusive(singleTap, pan);
   }
 
   // return gesture;

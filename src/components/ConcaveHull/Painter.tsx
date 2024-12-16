@@ -52,14 +52,22 @@ export const Painter = () => {
   const [brushMode, setBrushMode] = useState<ApplyOperation>(
     ApplyOperation.ADD
   );
-
+  const { addPoint, brushPath, endBrush } = usePointBrush({ brushMode });
+  const setViewLayout = useStoreSetViewLayout();
+  const viewLayout = useStoreViewLayout();
   const { zoomOnPoint } = useStore();
+  const { addFeature, resetFeatures, handleTap } = useStoreActions();
 
-  const { addFeature, resetFeatures } = useStoreActions();
+  const pan = useGesture({
+    isWorldMoveEnabled,
+    onTap: handleTap,
+    onUpdate: addPoint,
+    onEnd: endBrush
+  });
 
-  const onFlowerMenuEvent = useCallback((type: string, event: any) => {
-    log.debug('[FlowerMenu][event]', type, event);
-  }, []);
+  // const onFlowerMenuEvent = useCallback((type: string, event: any) => {
+  //   log.debug('[FlowerMenu][event]', type, event);
+  // }, []);
 
   const onNodeSelect = useCallback(({ id }: { id: string }) => {
     log.debug('[Painter][onNodeSelect]', id);
@@ -88,8 +96,6 @@ export const Painter = () => {
     }
   }, []);
 
-  log.debug('[Painter] 🖌️ brushMode', brushMode);
-
   useEffect(() => {
     addFeature(testFeature as BrushFeature);
     addFeature(testFeature2 as BrushFeature);
@@ -98,17 +104,6 @@ export const Painter = () => {
       resetFeatures();
     };
   }, []);
-
-  const setViewLayout = useStoreSetViewLayout();
-  const viewLayout = useStoreViewLayout();
-
-  const { addPoint, brushPath, endBrush } = usePointBrush({ brushMode });
-
-  const pan = useGesture({
-    isWorldMoveEnabled,
-    onUpdate: addPoint,
-    onEnd: endBrush
-  });
 
   const [mViewMatrix, mViewPosition, mViewScale, mViewBBox] = useStoreState(
     (state) => [
@@ -137,7 +132,7 @@ export const Painter = () => {
     <View style={styles.container}>
       <FlowerMenuStoreProvider
         insets={{ left: 10, top: 64, right: 10, bottom: 50 }}
-        onEvent={onFlowerMenuEvent}
+        // onEvent={onFlowerMenuEvent}
         onNodeSelect={onNodeSelect}
       >
         <GestureDetector gesture={pan}>

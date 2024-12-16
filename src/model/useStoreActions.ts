@@ -9,7 +9,8 @@ export const useStoreActions = () => {
       moveToPosition: state.moveToPosition,
       addFeature: state.addFeature,
       resetFeatures: state.resetFeatures,
-      getVisibleFeatures: state.getVisibleFeatures
+      getVisibleFeatures: state.getVisibleFeatures,
+      handleTap: state.handleTap
     }),
     shallow
   );
