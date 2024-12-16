@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
@@ -33,6 +33,7 @@ import {
 } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature, Vector2 } from '@types';
+import { FlowerMenuStoreProvider } from '../FlowerMenu/storeContext';
 import { MiniMap } from './MiniMap';
 import { ModeButton } from './ModeButton';
 import { ShapeRenderer } from './ShapeRenderer';
@@ -49,17 +50,21 @@ export const Painter = () => {
 
   const { addFeature, resetFeatures } = useStoreActions();
 
-  const events = useEvents();
+  const onFlowerMenuEvent = useCallback((event: any, ...args: any[]) => {
+    log.debug('[FlowerMenu][event]', event, ...args);
+  }, []);
 
-  useEffect(() => {
-    const handler = (event: any) => {
-      log.debug('event', event);
-    };
-    events?.on('*', handler);
-    return () => {
-      events?.off('*', handler);
-    };
-  }, [events]);
+  // const events = useEvents();
+
+  // useEffect(() => {
+  //   const handler = (event: any) => {
+  //     log.debug('event', event);
+  //   };
+  //   events?.on('*', handler);
+  //   return () => {
+  //     events?.off('*', handler);
+  //   };
+  // }, [events]);
 
   useEffect(() => {
     addFeature(testFeature as BrushFeature);
@@ -105,41 +110,46 @@ export const Painter = () => {
 
   return (
     <View style={styles.container}>
-      <GestureDetector gesture={pan}>
-        <Canvas
-          style={styles.canvas}
-          ref={canvasRef}
-          onLayout={(event) => {
-            const { width, height } = event.nativeEvent.layout;
-            setViewLayout(width, height);
-          }}
-        >
-          <ContextBridge>
-            <Group matrix={mViewMatrix}>
-              {/* <Rect x={-15} y={-15} width={30} height={30} color='red' />
+      <FlowerMenuStoreProvider
+        insets={{ left: 10, top: 50, right: 10, bottom: 50 }}
+        onEvent={onFlowerMenuEvent}
+      >
+        <GestureDetector gesture={pan}>
+          <Canvas
+            style={styles.canvas}
+            ref={canvasRef}
+            onLayout={(event) => {
+              const { width, height } = event.nativeEvent.layout;
+              setViewLayout(width, height);
+            }}
+          >
+            <ContextBridge>
+              <Group matrix={mViewMatrix}>
+                {/* <Rect x={-15} y={-15} width={30} height={30} color='red' />
               <Rect x={-15} y={-15 + 60} width={30} height={30} color='black' /> */}
 
-              <ShapeRenderer />
+                <ShapeRenderer />
 
-              {/* <Group matrix={shapeMatrix}>
+                {/* <Group matrix={shapeMatrix}>
               <Path path={hullPath} color='#444' />
             </Group> */}
-            </Group>
+              </Group>
 
-            <MiniMap />
+              <MiniMap />
 
-            <Path path={svgPath} color='black' />
-          </ContextBridge>
-        </Canvas>
-      </GestureDetector>
+              <Path path={svgPath} color='black' />
+            </ContextBridge>
+          </Canvas>
+        </GestureDetector>
 
-      <FlowerMenu
-        isWorldMoveEnabled={isWorldMoveEnabled}
-        onPress={() => setIsWorldMoveEnabled(!isWorldMoveEnabled)}
-      />
-      <ZoomControls />
+        <FlowerMenu
+          isWorldMoveEnabled={isWorldMoveEnabled}
+          onPress={() => setIsWorldMoveEnabled(!isWorldMoveEnabled)}
+        />
+        <ZoomControls />
 
-      <Debug />
+        <Debug />
+      </FlowerMenuStoreProvider>
     </View>
   );
 };

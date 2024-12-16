@@ -1,91 +1,17 @@
-import { createContext, useContext, useState } from 'react';
-
+import mitt, { Emitter } from 'mitt';
 import { makeMutable } from 'react-native-reanimated';
-import { createStore, useStore } from 'zustand';
+import { createStore } from 'zustand';
 
 import { createLogger } from '@helpers/log';
-import { createSelectors, type WithSelectors } from '@helpers/zustand';
 import { LayoutInsets, Vector2 } from '@types';
+import { data, simpleData } from './data';
 import {
   FlowerMenuSpatialIndex,
   createSpatialIndex
 } from './flowerMenuSpatialIndex';
-import type { NodeState } from './types';
+import type { Node, NodeState } from './types';
 
 const log = createLogger('FlowerMenuStore');
-
-type Node = {
-  id: string;
-  name: string;
-  icon?: string;
-  openOnFocus?: boolean;
-  children?: Node[];
-};
-
-const simpleData: Node[] = [
-  {
-    id: 'root',
-    name: 'Root',
-    icon: 'edit'
-  }
-];
-
-const data: Node[] = [
-  {
-    id: 'root',
-    name: 'root',
-    children: [
-      {
-        id: 'move',
-        name: 'Move',
-        children: [
-          {
-            id: 'pan',
-            name: 'Pan',
-            icon: 'pan-tool'
-          },
-          {
-            id: 'zoom_in',
-            name: 'Zoom In',
-            icon: 'zoom_in_map'
-          },
-          {
-            id: 'zoom_out',
-            name: 'Zoom Out',
-            icon: 'zoom_out_map'
-          },
-          {
-            id: 'reset',
-            name: 'Reset',
-            icon: 'refresh'
-          }
-        ]
-      },
-      {
-        id: 'edit',
-        name: 'Edit',
-        icon: 'edit'
-      },
-      {
-        id: 'history',
-        name: 'History',
-        openOnFocus: true,
-        children: [
-          {
-            id: 'undo',
-            name: 'Undo',
-            icon: 'undo'
-          },
-          {
-            id: 'redo',
-            name: 'Redo',
-            icon: 'redo'
-          }
-        ]
-      }
-    ]
-  }
-];
 
 const createNodes = (
   data: Node[],
@@ -128,11 +54,13 @@ const createNodeState = (node: Node, parentId?: string): NodeState => {
     id: node.id,
     name: node.name,
     icon: node.icon,
-    position: makeMutable({ x: 430 / 2, y: 932 / 2 }),
+    action: node.action,
+    position: makeMutable(node.position ?? { x: 10, y: 10 }),
     selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
     children: node.children?.map((child) => child.id) ?? [],
     parentId,
     isOpen: false,
+    isActive: false,
     bounds: { x: 0, y: 0, width: 0, height: 0 }
   };
 };
@@ -142,7 +70,16 @@ export interface FlowerMenuStoreProps {
   selectedNodeId: Record<string, string>;
   spatialIndex: FlowerMenuSpatialIndex;
   insets: LayoutInsets;
+  events: Emitter<any>;
 }
+
+const defaultProps: FlowerMenuStoreProps = {
+  nodes: {},
+  selectedNodeId: {},
+  spatialIndex: createSpatialIndex(),
+  insets: { left: 10, top: 50, right: 10, bottom: 50 },
+  events: mitt()
+};
 
 export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
   initialise: () => void;
@@ -154,13 +91,6 @@ export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
   handleNodeSelect: (nodeId: string) => void;
   handleNodeLongPress: (nodeId: string) => void;
 }
-
-const defaultProps: FlowerMenuStoreProps = {
-  nodes: {},
-  selectedNodeId: {},
-  spatialIndex: createSpatialIndex(),
-  insets: { left: 10, top: 10, right: 10, bottom: 10 }
-};
 
 export type FlowerMenuStore = ReturnType<typeof createFlowerMenuStore>;
 
@@ -250,25 +180,33 @@ export const createFlowerMenuStore = (
           };
         }
 
+        const newState = { ...nodeState, isActive: !nodeState.isActive };
         // if the node does not have children, the fire an event
-        else {
-          nodeState.action = 'select';
-        }
+        get().events.emit('nodeSelect', newState);
 
         return {
           ...state,
           nodes: {
             ...state.nodes,
-            [nodeId]: {
-              ...nodeState,
-              selectedChild: (selectedChild + 1) % children.length
-            }
-          },
-          selectedNodeIds: {
-            ...state.selectedNodeId,
-            [nodeId]: children[selectedChild]
+            [nodeId]: newState
           }
         };
+
+        // return {
+        //   ...state,
+        //   nodes: {
+        //     ...state.nodes,
+        //     [nodeId]: {
+        //       ...nodeState,
+        //       isActive: true,
+        //       // selectedChild: (selectedChild + 1) % children.length
+        //     }
+        //   },
+        //   selectedNodeIds: {
+        //     ...state.selectedNodeId,
+        //     [nodeId]: children[selectedChild]
+        //   }
+        // };
       }),
     handleNodeLongPress: (nodeId: string) => {
       log.debug('handleNodeLongPress', nodeId);

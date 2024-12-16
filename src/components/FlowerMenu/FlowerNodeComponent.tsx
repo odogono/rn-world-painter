@@ -13,7 +13,12 @@ import Animated, {
 import { MaterialIcons } from '@expo/vector-icons';
 import { createLogger } from '@helpers/log';
 import type { LayoutInsets, Vector2 } from '@types';
-import { useFlowerMenuStore, useMenuStore } from './storeContext';
+import {
+  useFlowerMenuEvents,
+  useFlowerMenuNode,
+  useFlowerMenuStore,
+  useMenuStore
+} from './storeContext';
 import { NodeState } from './types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -37,7 +42,7 @@ const HEIGHT = 56;
  * @returns
  */
 export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
-  const node = useFlowerMenuStore((s) => s.nodes[nodeId]);
+  const node = useFlowerMenuNode(nodeId);
 
   // const nodeState = useMenuStore().use.getNodeState()(nodeId);
   const nodeIcon = useMenuStore().use.getNodeIcon()(nodeId);
@@ -93,6 +98,7 @@ type UseGesturesProps = {
 };
 
 const useGestures = ({ node, handleNodeTap }: UseGesturesProps) => {
+  const events = useFlowerMenuEvents();
   const translation = useSharedValue<Vector2>({ x: 0, y: 0 });
   const { id: nodeId, position } = node;
 
@@ -133,10 +139,15 @@ const useGestures = ({ node, handleNodeTap }: UseGesturesProps) => {
       });
     })
     .onEnd(() => {
-      runOnJS(log.debug)('drag end', SCREEN_WIDTH, SCREEN_HEIGHT);
+      // runOnJS(log.debug)('drag end', SCREEN_WIDTH, SCREEN_HEIGHT);
+
+      const safePosition = getSafeNodePosition(node);
+
+      runOnJS(events.emit)('nodeMove', { nodeId, safePosition });
 
       // adjust the node position to be within the screen bounds
-      position.value = withTiming(getSafeNodePosition(node), {
+      // eslint-disable-next-line react-compiler/react-compiler
+      position.value = withTiming(safePosition, {
         duration: 200
       });
     })

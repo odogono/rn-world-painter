@@ -10,7 +10,17 @@ export type NodeState = {
   children: string[];
   parentId?: string | undefined;
   isOpen: boolean;
-
+  isActive: boolean;
   position: Mutable<Vector2>;
   bounds: Rect2;
+};
+
+export type Node = {
+  id: string;
+  name: string;
+  icon?: string;
+  action?: string;
+  openOnFocus?: boolean;
+  children?: Node[];
+  position?: Vector2;
 };

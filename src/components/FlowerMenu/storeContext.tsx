@@ -16,11 +16,14 @@ export const FlowerMenuStoreContext =
   createContext<FlowerMenuStoreWithSelectors | null>(null);
 
 type FlowerMenuStoreProviderProps = React.PropsWithChildren<
-  Partial<FlowerMenuStoreProps>
+  Partial<FlowerMenuStoreProps> & {
+    onEvent: (event: any) => void;
+  }
 >;
 
 export const FlowerMenuStoreProvider = ({
   children,
+  onEvent,
   ...props
 }: FlowerMenuStoreProviderProps) => {
   const [store, setStore] = useState<FlowerMenuStoreWithSelectors | null>(null);
@@ -28,6 +31,7 @@ export const FlowerMenuStoreProvider = ({
   if (store === null) {
     const newStore = createSelectors(createFlowerMenuStore(props));
     newStore.getState().initialise();
+    newStore.getState().events.on('*', onEvent);
     setStore(newStore);
   }
 
@@ -50,4 +54,14 @@ export const useMenuStore = () => {
   const store = useContext(FlowerMenuStoreContext);
   if (!store) throw new Error('FlowerMenuStoreProvider not found');
   return store;
+};
+
+export const useFlowerMenuNode = (nodeId: string) => {
+  return useFlowerMenuStore((s) => s.nodes[nodeId]);
+};
+
+export const useFlowerMenuEvents = () => {
+  const store = useContext(FlowerMenuStoreContext);
+  if (!store) throw new Error('FlowerMenuStoreProvider not found');
+  return store.getState().events;
 };

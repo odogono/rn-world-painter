@@ -50,21 +50,7 @@ export class FlowerMenuSpatialIndex extends RBush<NodeState> {
   }
 
   findByIntersecting(feature: NodeState) {
-    const bboxIntersections = this.findByBBox(feature.bbox!);
-
-    // const intersectingFeatures = bboxIntersections.filter(
-    //   (intersectingFeature) => {
-    //     return booleanDisjoint(feature, intersectingFeature);
-    //   }
-    // );
-
-    // console.log(
-    //   '[findByIntersecting] intersectingFeatures',
-    //   intersectingFeatures.length,
-    //   'bboxIntersections',
-    //   bboxIntersections.length
-    // );
-
+    const bboxIntersections = this.findByBBox(feature.bounds);
     return bboxIntersections;
   }
 }

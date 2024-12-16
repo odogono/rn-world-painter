@@ -17,7 +17,6 @@ const log = createLogger('FlowerMenu');
 export type FlowerMenuProps = {
   isWorldMoveEnabled: boolean;
   onPress: () => void;
-  insets: LayoutInsets;
 };
 
 /**
@@ -31,30 +30,16 @@ export type FlowerMenuProps = {
  */
 export const FlowerMenu = ({
   isWorldMoveEnabled,
-  onPress,
-  insets = { left: 10, top: 10, right: 10, bottom: 10 }
+  onPress
 }: FlowerMenuProps) => {
-  return (
-    <FlowerMenuStoreProvider insets={insets}>
-      <FlowerMenuContainer />
-    </FlowerMenuStoreProvider>
-  );
-};
-
-const FlowerMenuContainer = () => {
   const nodeIds = useMenuStore().use.getChildNodeIds()();
   const selectedNodeIds = useFlowerMenuStore((s) => s.nodes);
-  // const ns = useFlowerMenuStore((s) => s.nodes);
 
   useEffect(() => {
-    nodeIds.forEach((id) => {
-      const selected = selectedNodeIds[id];
-      log.debug(
-        'FlowerMenuContainer',
-        id,
-        selected.children[selected.selectedChild]
-      );
-    });
+    // nodeIds.forEach((id) => {
+    //   const selected = selectedNodeIds[id];
+    //   log.debug(id, selected.children[selected.selectedChild]);
+    // });
   }, [nodeIds, selectedNodeIds]);
 
   // log.debug('FlowerMenuContainer rendered', nodeIds);
