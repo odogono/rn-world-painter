@@ -7,6 +7,7 @@ import { createLogger } from '@helpers/log';
 import { LayoutInsets, Vector2 } from '@types';
 import { Node, NodeState } from '../types';
 import { data, simpleData } from './data';
+import type { FlowerMenuEvents } from './events';
 import {
   FlowerMenuSpatialIndex,
   createSpatialIndex
@@ -72,7 +73,7 @@ export interface FlowerMenuStoreProps {
   selectedNodeId: Record<string, string>;
   spatialIndex: FlowerMenuSpatialIndex;
   insets: LayoutInsets;
-  events: Emitter<any>;
+  events: Emitter<FlowerMenuEvents>;
 }
 
 const defaultProps: FlowerMenuStoreProps = {
@@ -80,7 +81,7 @@ const defaultProps: FlowerMenuStoreProps = {
   selectedNodeId: {},
   spatialIndex: createSpatialIndex(),
   insets: { left: 10, top: 50, right: 10, bottom: 50 },
-  events: mitt()
+  events: mitt<FlowerMenuEvents>()
 };
 
 export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
@@ -92,6 +93,8 @@ export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
   getChildNodeIds: (nodeId?: string) => string[];
   handleNodeSelect: (nodeId: string) => void;
   handleNodeLongPress: (nodeId: string) => void;
+
+  applyNodeProps: (props: Record<string, any>) => void;
 }
 
 export type FlowerMenuStore = ReturnType<typeof createFlowerMenuStore>;
@@ -111,6 +114,7 @@ export const createFlowerMenuStore = (
         };
       },
       merge: (persistedState, currentState) => {
+        // todo - complete merging of state
         log.debug('merge persisted', persistedState);
         log.debug('merge current', currentState);
         return currentState;
@@ -201,35 +205,74 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
         };
       }
 
-      const newState = { ...nodeState, isActive: !nodeState.isActive };
+      // const newState = { ...nodeState, isActive: !nodeState.isActive };
       // if the node does not have children, the fire an event
-      get().events.emit('nodeSelect', newState);
+      get().events.emit('node:select', { id: nodeState.id });
 
-      return {
-        ...state,
-        nodes: {
-          ...state.nodes,
-          [nodeId]: newState
-        }
-      };
-
-      // return {
-      //   ...state,
-      //   nodes: {
-      //     ...state.nodes,
-      //     [nodeId]: {
-      //       ...nodeState,
-      //       isActive: true,
-      //       // selectedChild: (selectedChild + 1) % children.length
-      //     }
-      //   },
-      //   selectedNodeIds: {
-      //     ...state.selectedNodeId,
-      //     [nodeId]: children[selectedChild]
-      //   }
-      // };
+      return state;
     }),
+
+  applyNodeProps: (props: Record<string, any>) =>
+    set((state) => {
+      let newState = state;
+      Object.entries(props).forEach(([key, value]) => {
+        const { id, prop } = parseNodeKey(key);
+        log.debug('[applyNodeProps]', id, prop, value);
+
+        newState = applyNodeState(newState, id, prop, value);
+      });
+      // log.debug('[applyNodeProps] newState', newState);
+      return newState;
+    }),
+
   handleNodeLongPress: (nodeId: string) => {
     log.debug('handleNodeLongPress', nodeId);
   }
 });
+
+const applyNodeState = (
+  state: FlowerMenuStoreState,
+  nodeId: string,
+  prop: string,
+  value: any
+) => {
+  const nodeState = state.nodes[nodeId];
+  if (nodeState) {
+    return {
+      ...state,
+      nodes: {
+        ...state.nodes,
+        [nodeId]: {
+          ...nodeState,
+          [prop]: value
+        }
+      }
+    };
+  }
+  return state;
+};
+
+const parseNodeKey = (input: string) => {
+  // Find the position of "Node" in the string
+  const nodeIndex = input.indexOf('Node');
+  if (nodeIndex === -1) {
+    throw new Error('Invalid format: string must contain "Node"');
+  }
+
+  // Split the string into id and prop parts
+  const id = input.slice(0, nodeIndex);
+  const prop = input.slice(nodeIndex + 4); // +4 to skip "Node"
+
+  // Convert first character of prop to lowercase
+  const formattedProp = prop.charAt(0).toLowerCase() + prop.slice(1);
+
+  // Convert camelCase id to separate words if needed
+  const formattedId = id.replace(/([A-Z])/g, (match, letter, offset) => {
+    return offset > 0 ? letter.toLowerCase() : letter.toLowerCase();
+  });
+
+  return {
+    id: formattedId,
+    prop: formattedProp
+  };
+};

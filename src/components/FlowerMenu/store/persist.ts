@@ -16,11 +16,11 @@ export const appStorage = createJSONStorage(
       },
 
       setItem: async (key: string, value: any) => {
-        log.debug('[storage] setItem', key, value);
+        // log.debug('[storage] setItem', key, value);
         return mmkvStorage.set(key, value);
       },
       removeItem: async (key: string) => {
-        log.debug('[storage] removeItem', key);
+        // log.debug('[storage] removeItem', key);
 
         return mmkvStorage.delete(key);
       }

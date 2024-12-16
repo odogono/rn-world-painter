@@ -1,12 +1,26 @@
 import type { Node } from '../types';
 
 export const simpleData: Node[] = [
+  // {
+  //   id: 'root',
+  //   name: 'Root',
+  //   icon: 'edit',
+  //   action: 'edit',
+  //   position: { x: 355, y: 835 }
+  // },
   {
-    id: 'root',
-    name: 'Root',
+    id: 'edit',
+    name: 'Edit',
     icon: 'edit',
     action: 'edit',
     position: { x: 355, y: 835 }
+  },
+  {
+    id: 'pan',
+    name: 'Pan',
+    icon: 'pan-tool',
+    position: { x: 355, y: 835 - 59 - 16 },
+    action: 'pan'
   }
 ];
 

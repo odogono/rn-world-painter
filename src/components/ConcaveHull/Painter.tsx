@@ -50,8 +50,24 @@ export const Painter = () => {
 
   const { addFeature, resetFeatures } = useStoreActions();
 
-  const onFlowerMenuEvent = useCallback((event: any, ...args: any[]) => {
-    log.debug('[FlowerMenu][event]', event, ...args);
+  const onFlowerMenuEvent = useCallback((type: string, event: any) => {
+    log.debug('[FlowerMenu][event]', type, event);
+    // if (type === 'node:select') {
+    //   if (event.id === 'edit') {
+    //     setIsWorldMoveEnabled(false);
+    //   } else {
+    //     setIsWorldMoveEnabled(true);
+    //   }
+    // }
+  }, []);
+
+  const onNodeSelect = useCallback(({ id }: { id: string }) => {
+    log.debug('[Painter][onNodeSelect]', id);
+    if (id === 'edit') {
+      setIsWorldMoveEnabled(false);
+    } else {
+      setIsWorldMoveEnabled(true);
+    }
   }, []);
 
   // const events = useEvents();
@@ -113,6 +129,7 @@ export const Painter = () => {
       <FlowerMenuStoreProvider
         insets={{ left: 10, top: 50, right: 10, bottom: 50 }}
         onEvent={onFlowerMenuEvent}
+        onNodeSelect={onNodeSelect}
       >
         <GestureDetector gesture={pan}>
           <Canvas
@@ -143,8 +160,8 @@ export const Painter = () => {
         </GestureDetector>
 
         <FlowerMenu
-          isWorldMoveEnabled={isWorldMoveEnabled}
-          onPress={() => setIsWorldMoveEnabled(!isWorldMoveEnabled)}
+          editNodeIsActive={!isWorldMoveEnabled}
+          panNodeIsActive={isWorldMoveEnabled}
         />
         <ZoomControls />
 

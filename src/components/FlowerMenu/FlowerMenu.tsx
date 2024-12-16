@@ -10,14 +10,13 @@ import {
   useMenuStore
 } from './store/context';
 
-const { width, height } = Dimensions.get('window');
-
 const log = createLogger('FlowerMenu');
 
-export type FlowerMenuProps = {
-  isWorldMoveEnabled: boolean;
-  onPress: () => void;
-};
+export type FlowerMenuProps = Partial<{
+  [key: string]: any;
+  // isWorldMoveEnabled: boolean;
+  // onPress: () => void;
+}>;
 
 /**
  * Single tap - cycle through children
@@ -28,13 +27,19 @@ export type FlowerMenuProps = {
  * @param param0
  * @returns
  */
-export const FlowerMenu = ({
-  isWorldMoveEnabled,
-  onPress
-}: FlowerMenuProps) => {
+export const FlowerMenu = ({ ...nodeProps }: FlowerMenuProps) => {
   const nodeIds = useMenuStore().use.getChildNodeIds()();
   const selectedNodeIds = useFlowerMenuStore((s) => s.nodes);
+  const applyNodeProps = useFlowerMenuStore((s) => s.applyNodeProps);
 
+  const nodePropStr = JSON.stringify(nodeProps);
+
+  useEffect(() => {
+    applyNodeProps(nodeProps);
+    log.debug('applyNodeProps', nodeProps);
+  }, [nodePropStr]);
+
+  log.debug('FlowerMenu', nodeProps);
   useEffect(() => {
     // nodeIds.forEach((id) => {
     //   const selected = selectedNodeIds[id];

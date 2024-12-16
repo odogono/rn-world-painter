@@ -1,8 +1,10 @@
 import { createContext, useContext, useState } from 'react';
 
+import type { Handler, WildcardHandler } from 'mitt';
 import { useStore } from 'zustand';
 
 import { WithSelectors, createSelectors } from '@helpers/zustand';
+import { FlowerMenuEvents } from './events';
 import {
   FlowerMenuStore,
   FlowerMenuStoreProps,
@@ -17,13 +19,15 @@ export const FlowerMenuStoreContext =
 
 type FlowerMenuStoreProviderProps = React.PropsWithChildren<
   Partial<FlowerMenuStoreProps> & {
-    onEvent: (event: any) => void;
+    onEvent?: WildcardHandler<FlowerMenuEvents> | undefined;
+    onNodeSelect?: Handler<{ id: string }>;
   }
 >;
 
 export const FlowerMenuStoreProvider = ({
   children,
   onEvent,
+  onNodeSelect,
   ...props
 }: FlowerMenuStoreProviderProps) => {
   const [store, setStore] = useState<FlowerMenuStoreWithSelectors | null>(null);
@@ -31,7 +35,14 @@ export const FlowerMenuStoreProvider = ({
   if (store === null) {
     const newStore = createSelectors(createFlowerMenuStore(props));
     newStore.getState().initialise();
-    newStore.getState().events.on('*', onEvent);
+
+    if (onEvent) {
+      newStore.getState().events.on('*', onEvent);
+    }
+    if (onNodeSelect) {
+      newStore.getState().events.on('node:select', onNodeSelect);
+    }
+
     setStore(newStore);
   }
 

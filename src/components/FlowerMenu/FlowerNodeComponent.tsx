@@ -79,7 +79,8 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
         style={[
           styles.modeButton,
           animatedStyle,
-          isGroup ? styles.groupButton : {}
+          isGroup ? styles.groupButton : {},
+          node.isActive ? styles.isActive : {}
         ]}
       >
         <MaterialIcons
@@ -216,5 +217,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'black',
     borderStyle: 'dashed'
+  },
+  isActive: {
+    backgroundColor: '#999'
   }
 });
