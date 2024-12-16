@@ -12,7 +12,9 @@ import {
 
 const log = createLogger('FlowerMenu');
 
-export type FlowerMenuProps = Partial<{
+export type FlowerMenuProps = {
+  viewLayout: LayoutRectangle;
+} & Partial<{
   [key: string]: any;
   // isWorldMoveEnabled: boolean;
   // onPress: () => void;
@@ -27,27 +29,35 @@ export type FlowerMenuProps = Partial<{
  * @param param0
  * @returns
  */
-export const FlowerMenu = ({ ...nodeProps }: FlowerMenuProps) => {
-  const nodeIds = useMenuStore().use.getChildNodeIds()();
+export const FlowerMenu = ({ viewLayout, ...nodeProps }: FlowerMenuProps) => {
+  const nodeIds = useMenuStore().use.getVisibleNodeIds()();
   const selectedNodeIds = useFlowerMenuStore((s) => s.nodes);
   const applyNodeProps = useFlowerMenuStore((s) => s.applyNodeProps);
+  const setViewLayout = useFlowerMenuStore((s) => s.setViewLayout);
 
   const nodePropStr = JSON.stringify(nodeProps);
 
   useEffect(() => {
     applyNodeProps(nodeProps);
-    log.debug('applyNodeProps', nodeProps);
+    // log.debug('applyNodeProps', nodeProps);
   }, [nodePropStr]);
 
-  log.debug('FlowerMenu', nodeProps);
   useEffect(() => {
-    // nodeIds.forEach((id) => {
-    //   const selected = selectedNodeIds[id];
-    //   log.debug(id, selected.children[selected.selectedChild]);
-    // });
-  }, [nodeIds, selectedNodeIds]);
+    if (viewLayout) {
+      setViewLayout(viewLayout);
+    }
+    log.debug('viewLayout', viewLayout);
+  }, [viewLayout]);
 
-  // log.debug('FlowerMenuContainer rendered', nodeIds);
+  // log.debug('FlowerMenu', nodeProps);
+  // useEffect(() => {
+  //   // nodeIds.forEach((id) => {
+  //   //   const selected = selectedNodeIds[id];
+  //   //   log.debug(id, selected.children[selected.selectedChild]);
+  //   // });
+  // }, [nodeIds, selectedNodeIds]);
+
+  log.debug('FlowerMenuContainer rendered', nodeIds);
   return (
     <View style={styles.container}>
       {nodeIds.map((id) => (

@@ -1,10 +1,12 @@
+import { LayoutRectangle } from 'react-native';
+
 import mitt, { Emitter } from 'mitt';
-import { makeMutable } from 'react-native-reanimated';
+import { makeMutable, withTiming } from 'react-native-reanimated';
 import { createStore } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { createLogger } from '@helpers/log';
-import { LayoutInsets, Vector2 } from '@types';
+import { LayoutInsets, Rect2, Vector2 } from '@types';
 import { Node, NodeState } from '../types';
 import { data, simpleData } from './data';
 import type { FlowerMenuEvents } from './events';
@@ -12,66 +14,21 @@ import {
   FlowerMenuSpatialIndex,
   createSpatialIndex
 } from './flowerMenuSpatialIndex';
+import {
+  applyChildPositions,
+  applyNodeState,
+  enforceInsetBounds,
+  parseNodeKey
+} from './helpers';
 import { appStorage } from './persist';
 
 const log = createLogger('FlowerMenuStore');
-
-const createNodes = (
-  data: Node[],
-  result: Record<string, NodeState>,
-  parentId?: string
-) => {
-  for (const node of data) {
-    const nodeState = createNodeState(node, parentId);
-    result[node.id] = nodeState;
-
-    if (node.children) {
-      createNodes(node.children, result, node.id);
-    }
-  }
-
-  return result;
-};
-
-const getChildNodeIds = (
-  nodes: Record<string, NodeState>,
-  nodeId?: string
-): string[] => {
-  if (!nodeId) {
-    return Object.values(nodes)
-      .filter((node) => !node.parentId)
-      .map((node) => node.id);
-  }
-
-  const node = nodes[nodeId];
-
-  if (!node) {
-    throw new Error(`Undefined node ${nodeId}`);
-  }
-
-  return node.children;
-};
-
-const createNodeState = (node: Node, parentId?: string): NodeState => {
-  return {
-    id: node.id,
-    name: node.name,
-    icon: node.icon,
-    action: node.action,
-    position: makeMutable(node.position ?? { x: 10, y: 10 }),
-    selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
-    children: node.children?.map((child) => child.id) ?? [],
-    parentId,
-    isOpen: false,
-    isActive: false,
-    bounds: { x: 0, y: 0, width: 0, height: 0 }
-  };
-};
 
 export interface FlowerMenuStoreProps {
   nodes: Record<string, NodeState>;
   selectedNodeId: Record<string, string>;
   spatialIndex: FlowerMenuSpatialIndex;
+  viewLayout: LayoutRectangle;
   insets: LayoutInsets;
   events: Emitter<FlowerMenuEvents>;
 }
@@ -80,7 +37,8 @@ const defaultProps: FlowerMenuStoreProps = {
   nodes: {},
   selectedNodeId: {},
   spatialIndex: createSpatialIndex(),
-  insets: { left: 10, top: 50, right: 10, bottom: 50 },
+  viewLayout: { x: 0, y: 0, width: 0, height: 0 },
+  insets: { left: 10, top: 100, right: 10, bottom: 50 },
   events: mitt<FlowerMenuEvents>()
 };
 
@@ -93,8 +51,12 @@ export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
   getChildNodeIds: (nodeId?: string) => string[];
   handleNodeSelect: (nodeId: string) => void;
   handleNodeLongPress: (nodeId: string) => void;
+  handleNodeDragStart: (nodeId: string) => void;
+  handleNodeDragEnd: (nodeId: string) => void;
+  getVisibleNodeIds: () => string[];
 
   applyNodeProps: (props: Record<string, any>) => void;
+  setViewLayout: (layout: LayoutRectangle) => void;
 }
 
 export type FlowerMenuStore = ReturnType<typeof createFlowerMenuStore>;
@@ -147,9 +109,25 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
       return { nodes, selectedNodeIds };
     }),
 
+  setViewLayout: (layout: LayoutRectangle) =>
+    set((state) => ({ ...state, viewLayout: layout })),
+
   getChildNodeIds: (nodeId?: string) => {
     return getChildNodeIds(get().nodes, nodeId);
   },
+
+  getVisibleNodeIds: () => {
+    const nodes = get().nodes as Record<string, NodeState>;
+    return Object.values(nodes)
+      .filter((node) => {
+        if (node.parentId) {
+          return nodes[node.parentId].isOpen;
+        }
+        return true;
+      })
+      .map((node) => node.id);
+  },
+
   getNodeState: (nodeId: string) => {
     const node = get().nodes[nodeId];
     if (!node) {
@@ -189,25 +167,47 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
         throw new Error(`Node ${nodeId} not found`);
       }
 
-      const { selectedChild, children } = nodeState;
+      const { children } = nodeState;
 
       // if the node has children, then toggle the isOpen status
       if (children.length > 0) {
-        return {
-          ...state,
-          nodes: {
-            ...state.nodes,
-            [nodeId]: {
-              ...nodeState,
-              isOpen: !nodeState.isOpen
-            }
-          }
-        };
+        let newState = applyNodeState(
+          state,
+          nodeId,
+          'isOpen',
+          !nodeState.isOpen
+        );
+
+        newState = applyChildPositions(newState, nodeId);
+
+        return newState;
       }
 
       // const newState = { ...nodeState, isActive: !nodeState.isActive };
       // if the node does not have children, the fire an event
       get().events.emit('node:select', { id: nodeState.id });
+
+      return state;
+    }),
+
+  handleNodeDragStart: (nodeId: string) =>
+    set((state) => {
+      const nodeState = state.getNodeState(nodeId);
+
+      if (nodeState.isOpen) {
+        return applyNodeState(state, nodeId, 'isOpen', false);
+      }
+      // determine whether the node has intersected with any other nodes
+      // determine whether the node is within insets
+      // enforceInsetBounds(state, nodeId);
+
+      return state;
+    }),
+  handleNodeDragEnd: (nodeId: string) =>
+    set((state) => {
+      // determine whether the node has intersected with any other nodes
+      // determine whether the node is within insets
+      enforceInsetBounds(state, nodeId);
 
       return state;
     }),
@@ -230,49 +230,54 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
   }
 });
 
-const applyNodeState = (
-  state: FlowerMenuStoreState,
-  nodeId: string,
-  prop: string,
-  value: any
-) => {
-  const nodeState = state.nodes[nodeId];
-  if (nodeState) {
-    return {
-      ...state,
-      nodes: {
-        ...state.nodes,
-        [nodeId]: {
-          ...nodeState,
-          [prop]: value
-        }
-      }
-    };
-  }
-  return state;
+const createNodeState = (node: Node, parentId?: string): NodeState => {
+  return {
+    id: node.id,
+    name: node.name,
+    icon: node.icon,
+    action: node.action,
+    position: makeMutable(node.position ?? { x: 10, y: 10 }),
+    selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
+    children: node.children?.map((child) => child.id) ?? [],
+    parentId,
+    isOpen: false,
+    isActive: false,
+    bounds: { x: 0, y: 0, width: 0, height: 0 }
+  };
 };
 
-const parseNodeKey = (input: string) => {
-  // Find the position of "Node" in the string
-  const nodeIndex = input.indexOf('Node');
-  if (nodeIndex === -1) {
-    throw new Error('Invalid format: string must contain "Node"');
+const createNodes = (
+  data: Node[],
+  result: Record<string, NodeState>,
+  parentId?: string
+) => {
+  for (const node of data) {
+    const nodeState = createNodeState(node, parentId);
+    result[node.id] = nodeState;
+
+    if (node.children) {
+      createNodes(node.children, result, node.id);
+    }
   }
 
-  // Split the string into id and prop parts
-  const id = input.slice(0, nodeIndex);
-  const prop = input.slice(nodeIndex + 4); // +4 to skip "Node"
+  return result;
+};
 
-  // Convert first character of prop to lowercase
-  const formattedProp = prop.charAt(0).toLowerCase() + prop.slice(1);
+const getChildNodeIds = (
+  nodes: Record<string, NodeState>,
+  nodeId?: string
+): string[] => {
+  if (!nodeId) {
+    return Object.values(nodes)
+      .filter((node) => !node.parentId)
+      .map((node) => node.id);
+  }
 
-  // Convert camelCase id to separate words if needed
-  const formattedId = id.replace(/([A-Z])/g, (match, letter, offset) => {
-    return offset > 0 ? letter.toLowerCase() : letter.toLowerCase();
-  });
+  const node = nodes[nodeId];
 
-  return {
-    id: formattedId,
-    prop: formattedProp
-  };
+  if (!node) {
+    throw new Error(`Undefined node ${nodeId}`);
+  }
+
+  return node.children;
 };

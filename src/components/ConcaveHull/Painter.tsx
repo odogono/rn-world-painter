@@ -29,7 +29,8 @@ import { createLogger } from '@helpers/log';
 import {
   useStore,
   useStoreSetViewLayout,
-  useStoreState
+  useStoreState,
+  useStoreViewLayout
 } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature, Vector2 } from '@types';
@@ -47,40 +48,34 @@ export const Painter = () => {
   const ContextBridge = useContextBridge();
   const canvasRef = useCanvasRef();
   const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
+  const { zoomOnPoint } = useStore();
 
   const { addFeature, resetFeatures } = useStoreActions();
 
   const onFlowerMenuEvent = useCallback((type: string, event: any) => {
     log.debug('[FlowerMenu][event]', type, event);
-    // if (type === 'node:select') {
-    //   if (event.id === 'edit') {
-    //     setIsWorldMoveEnabled(false);
-    //   } else {
-    //     setIsWorldMoveEnabled(true);
-    //   }
-    // }
   }, []);
 
   const onNodeSelect = useCallback(({ id }: { id: string }) => {
     log.debug('[Painter][onNodeSelect]', id);
-    if (id === 'edit') {
-      setIsWorldMoveEnabled(false);
-    } else {
-      setIsWorldMoveEnabled(true);
+    switch (id) {
+      case 'edit':
+        setIsWorldMoveEnabled(false);
+        break;
+      case 'pan':
+        setIsWorldMoveEnabled(true);
+        break;
+      case 'zoomIn':
+        zoomOnPoint({ zoomFactor: 4 });
+        break;
+      case 'zoomOut':
+        zoomOnPoint({ zoomFactor: 0.5 });
+        break;
+      case 'reset':
+        zoomOnPoint({ toScale: 1 });
+        break;
     }
   }, []);
-
-  // const events = useEvents();
-
-  // useEffect(() => {
-  //   const handler = (event: any) => {
-  //     log.debug('event', event);
-  //   };
-  //   events?.on('*', handler);
-  //   return () => {
-  //     events?.off('*', handler);
-  //   };
-  // }, [events]);
 
   useEffect(() => {
     addFeature(testFeature as BrushFeature);
@@ -92,6 +87,7 @@ export const Painter = () => {
   }, []);
 
   const setViewLayout = useStoreSetViewLayout();
+  const viewLayout = useStoreViewLayout();
 
   const { addPoint, svgPath, endBrush } = usePointBrush();
 
@@ -127,7 +123,7 @@ export const Painter = () => {
   return (
     <View style={styles.container}>
       <FlowerMenuStoreProvider
-        insets={{ left: 10, top: 50, right: 10, bottom: 50 }}
+        insets={{ left: 10, top: 64, right: 10, bottom: 50 }}
         onEvent={onFlowerMenuEvent}
         onNodeSelect={onNodeSelect}
       >
@@ -160,10 +156,11 @@ export const Painter = () => {
         </GestureDetector>
 
         <FlowerMenu
+          viewLayout={viewLayout}
           editNodeIsActive={!isWorldMoveEnabled}
           panNodeIsActive={isWorldMoveEnabled}
         />
-        <ZoomControls />
+        {/* <ZoomControls /> */}
 
         <Debug />
       </FlowerMenuStoreProvider>
