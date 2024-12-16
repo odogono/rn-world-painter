@@ -5,6 +5,7 @@ import { useStore } from 'zustand';
 
 import { WithSelectors, createSelectors } from '@helpers/zustand';
 import { FlowerMenuEvents } from './events';
+import { openChildren } from './helpers';
 import {
   FlowerMenuStore,
   FlowerMenuStoreProps,
@@ -57,6 +58,16 @@ export const FlowerMenuStoreProvider = ({
           }
         }
       }));
+    });
+
+    state.events.on('view:layout', () => {
+      let state = newStore.getState();
+      Object.values(state.nodes).forEach((node) => {
+        if (node.isOpen) {
+          state = openChildren(state, node.id, false);
+        }
+      });
+      newStore.setState(() => state);
     });
 
     setStore(newStore);

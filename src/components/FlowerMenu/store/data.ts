@@ -1,6 +1,25 @@
 import type { Node } from '../types';
 
-export const simpleData: Node[] = [
+export const menuData: Node[] = [
+  {
+    id: 'brush',
+    name: 'Brush',
+    icon: 'brush',
+    isOpen: true,
+    position: { x: 10, y: 356 },
+    children: [
+      {
+        id: 'brushAdd',
+        name: 'Add',
+        icon: 'add-circle-outline'
+      },
+      {
+        id: 'brushRemove',
+        name: 'Remove',
+        icon: 'remove-circle-outline'
+      }
+    ]
+  },
   {
     id: 'visibility',
     name: 'Visibility',
@@ -57,62 +76,5 @@ export const simpleData: Node[] = [
     icon: 'pan-tool',
     position: { x: 361, y: 835 - 59 - 16 },
     action: 'pan'
-  }
-];
-
-export const data: Node[] = [
-  {
-    id: 'root',
-    name: 'root',
-    children: [
-      {
-        id: 'move',
-        name: 'Move',
-        children: [
-          {
-            id: 'pan',
-            name: 'Pan',
-            icon: 'pan-tool'
-          },
-          {
-            id: 'zoom_in',
-            name: 'Zoom In',
-            icon: 'zoom_in_map'
-          },
-          {
-            id: 'zoom_out',
-            name: 'Zoom Out',
-            icon: 'zoom_out_map'
-          },
-          {
-            id: 'reset',
-            name: 'Reset',
-            icon: 'refresh'
-          }
-        ]
-      },
-      {
-        id: 'edit',
-        name: 'Edit',
-        icon: 'edit'
-      },
-      {
-        id: 'history',
-        name: 'History',
-        openOnFocus: true,
-        children: [
-          {
-            id: 'undo',
-            name: 'Undo',
-            icon: 'undo'
-          },
-          {
-            id: 'redo',
-            name: 'Redo',
-            icon: 'redo'
-          }
-        ]
-      }
-    ]
   }
 ];

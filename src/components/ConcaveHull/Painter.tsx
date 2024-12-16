@@ -26,6 +26,7 @@ import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
 import { useEvents } from '@contexts/Events';
 import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
+import { ApplyOperation } from '@model/slices/featureSlice';
 import {
   useStore,
   useStoreSetViewLayout,
@@ -47,7 +48,11 @@ const log = createLogger('Painter');
 export const Painter = () => {
   const ContextBridge = useContextBridge();
   const canvasRef = useCanvasRef();
-  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
+  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(false);
+  const [brushMode, setBrushMode] = useState<ApplyOperation>(
+    ApplyOperation.ADD
+  );
+
   const { zoomOnPoint } = useStore();
 
   const { addFeature, resetFeatures } = useStoreActions();
@@ -74,8 +79,16 @@ export const Painter = () => {
       case 'reset':
         zoomOnPoint({ toScale: 1 });
         break;
+      case 'brushAdd':
+        setBrushMode(ApplyOperation.ADD);
+        break;
+      case 'brushRemove':
+        setBrushMode(ApplyOperation.SUBTRACT);
+        break;
     }
   }, []);
+
+  log.debug('[Painter] 🖌️ brushMode', brushMode);
 
   useEffect(() => {
     addFeature(testFeature as BrushFeature);
@@ -89,7 +102,7 @@ export const Painter = () => {
   const setViewLayout = useStoreSetViewLayout();
   const viewLayout = useStoreViewLayout();
 
-  const { addPoint, svgPath, endBrush } = usePointBrush();
+  const { addPoint, brushPath, endBrush } = usePointBrush({ brushMode });
 
   const pan = useGesture({
     isWorldMoveEnabled,
@@ -150,7 +163,7 @@ export const Painter = () => {
 
               <MiniMap />
 
-              <Path path={svgPath} color='black' />
+              <Path path={brushPath} color='black' />
             </ContextBridge>
           </Canvas>
         </GestureDetector>
@@ -159,6 +172,8 @@ export const Painter = () => {
           viewLayout={viewLayout}
           editNodeIsActive={!isWorldMoveEnabled}
           panNodeIsActive={isWorldMoveEnabled}
+          brushAddNodeIsActive={brushMode === ApplyOperation.ADD}
+          brushRemoveNodeIsActive={brushMode === ApplyOperation.SUBTRACT}
         />
         {/* <ZoomControls /> */}
 

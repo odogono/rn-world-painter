@@ -8,7 +8,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { createLogger } from '@helpers/log';
 import { LayoutInsets, Rect2, Vector2 } from '@types';
 import { Node, NodeState } from '../types';
-import { data, simpleData } from './data';
+import { menuData } from './data';
 import type { FlowerMenuEvents } from './events';
 import {
   FlowerMenuSpatialIndex,
@@ -27,7 +27,6 @@ const log = createLogger('FlowerMenuStore');
 
 export interface FlowerMenuStoreProps {
   nodes: Record<string, NodeState>;
-  selectedNodeId: Record<string, string>;
   spatialIndex: FlowerMenuSpatialIndex;
   viewLayout: LayoutRectangle;
   insets: LayoutInsets;
@@ -36,7 +35,6 @@ export interface FlowerMenuStoreProps {
 
 const defaultProps: FlowerMenuStoreProps = {
   nodes: {},
-  selectedNodeId: {},
   spatialIndex: createSpatialIndex(),
   viewLayout: { x: 0, y: 0, width: 0, height: 0 },
   insets: { left: 10, top: 100, right: 10, bottom: 50 },
@@ -72,8 +70,8 @@ export const createFlowerMenuStore = (
       storage: appStorage,
       partialize: (state) => {
         return {
-          nodes: state.nodes,
-          selectedNodeId: state.selectedNodeId
+          nodes: state.nodes
+          // selectedNodeId: state.selectedNodeId
         };
       },
       merge: (persistedState, currentState) => {
@@ -95,19 +93,17 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
       const nodes: Record<string, NodeState> = {};
       const selectedNodeIds: Record<string, string> = {};
 
-      createNodes(simpleData, nodes);
+      createNodes(menuData, nodes);
 
-      // set up the selected node ids
-      Object.values(nodes).forEach((node) => {
-        if (
-          node.selectedChild >= 0 &&
-          node.selectedChild < node.children.length
-        ) {
-          selectedNodeIds[node.id] = node.children[node.selectedChild];
-        }
-      });
+      const result = { ...state, nodes };
 
-      return { nodes, selectedNodeIds };
+      // ensure any children in an open state are positioned correctly
+      // bit of a hack, but works for now
+      setTimeout(() => {
+        state.events.emit('view:layout');
+      }, 50);
+
+      return result;
     }),
 
   setViewLayout: (layout: LayoutRectangle) =>
@@ -213,7 +209,7 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
       let newState = state;
       Object.entries(props).forEach(([key, value]) => {
         const { id, prop } = parseNodeKey(key);
-        log.debug('[applyNodeProps]', id, prop, value);
+        log.debug('[applyNodeProps]', key, id, prop, value);
 
         newState = applyNodeState(newState, id, prop, value);
       });
@@ -232,11 +228,11 @@ const createNodeState = (node: Node, parentId?: string): NodeState => {
     name: node.name,
     icon: node.icon,
     action: node.action,
-    position: makeMutable(node.position ?? { x: 10, y: 10 }),
+    position: makeMutable(node.position ?? { x: -10, y: -10 }),
     selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
     children: node.children?.map((child) => child.id) ?? [],
     parentId,
-    isOpen: false,
+    isOpen: node.isOpen ?? false,
     isActive: false,
     bounds: { x: 0, y: 0, width: 0, height: 0 }
   };
@@ -255,6 +251,17 @@ const createNodes = (
       createNodes(node.children, result, node.id);
     }
   }
+
+  // set the positions of any children in an open state
+  Object.values(result).forEach((node) => {
+    if (!node.parentId) {
+      return;
+    }
+    const parent = result[node.parentId];
+    if (parent.isOpen) {
+      // node.position.value = withTiming(parent.position.value, { duration: 200 });
+    }
+  });
 
   return result;
 };

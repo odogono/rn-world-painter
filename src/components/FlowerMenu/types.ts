@@ -23,4 +23,5 @@ export type Node = {
   openOnFocus?: boolean;
   children?: Node[];
   position?: Vector2;
+  isOpen?: boolean;
 };

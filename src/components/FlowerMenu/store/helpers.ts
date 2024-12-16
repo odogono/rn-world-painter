@@ -30,7 +30,11 @@ export const applyNodeState = (
   return state;
 };
 
-export const openChildren = (state: FlowerMenuStoreState, nodeId: string) => {
+export const openChildren = (
+  state: FlowerMenuStoreState,
+  nodeId: string,
+  doAnimate: boolean = true
+) => {
   const nodeState = state.nodes[nodeId];
 
   const { children: childIds, position } = nodeState;
@@ -68,14 +72,21 @@ export const openChildren = (state: FlowerMenuStoreState, nodeId: string) => {
         y: y + Math.sin(radians) * radius
       };
 
-      // set initial position to parent
-      childState.position.modify((p) => {
-        'worklet';
-        return { x, y };
-      });
+      if (doAnimate) {
+        // set initial position to parent
+        childState.position.modify((p) => {
+          'worklet';
+          return { x, y };
+        });
 
-      // animate to new position
-      childState.position.value = withTiming(newPosition, { duration: 200 });
+        // animate to new position
+        childState.position.value = withTiming(newPosition, { duration: 200 });
+      } else {
+        childState.position.modify((p) => {
+          'worklet';
+          return newPosition;
+        });
+      }
     }
 
     return acc;
@@ -281,12 +292,12 @@ export const parseNodeKey = (input: string) => {
   const formattedProp = prop.charAt(0).toLowerCase() + prop.slice(1);
 
   // Convert camelCase id to separate words if needed
-  const formattedId = id.replace(/([A-Z])/g, (match, letter, offset) => {
-    return offset > 0 ? letter.toLowerCase() : letter.toLowerCase();
-  });
+  // const formattedId = id.replace(/([A-Z])/g, (match, letter, offset) => {
+  //   return offset > 0 ? letter.toLowerCase() : letter.toLowerCase();
+  // });
 
   return {
-    id: formattedId,
+    id,
     prop: formattedProp
   };
 };

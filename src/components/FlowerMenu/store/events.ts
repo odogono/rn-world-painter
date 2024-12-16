@@ -5,4 +5,6 @@ export type FlowerMenuEvents = {
   'node:close:force': {
     id: string;
   };
+
+  'view:layout': object;
 };

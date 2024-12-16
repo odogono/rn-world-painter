@@ -13,7 +13,7 @@ export const POLYCLIP_RESULT_UNCHANGED = 0;
 export const applyFeatureUnion = (
   featureA: BrushFeature,
   featureB: BrushFeature
-) => {
+): [number, BrushFeature[]] => {
   const poly1: Geom = featureA.geometry.coordinates as Geom;
   const poly2: Geom = featureB.geometry.coordinates as Geom;
 
@@ -26,7 +26,7 @@ export const applyFeatureUnion = (
     result.push(feature);
   });
 
-  return result;
+  return [result.length, result];
 };
 
 export const applyFeatureDifference = (
