@@ -1,4 +1,4 @@
-import { createFlowerMenuStore } from '../store';
+import { createFlowerMenuStore } from '../store/store';
 
 describe('FlowerMenuStore', () => {
   it('should initialize with default values', () => {

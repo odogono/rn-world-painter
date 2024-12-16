@@ -8,7 +8,7 @@ import {
   FlowerMenuStoreProvider,
   useFlowerMenuStore,
   useMenuStore
-} from './storeContext';
+} from './store/context';
 
 const { width, height } = Dimensions.get('window');
 

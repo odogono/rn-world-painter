@@ -33,7 +33,7 @@ import {
 } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature, Vector2 } from '@types';
-import { FlowerMenuStoreProvider } from '../FlowerMenu/storeContext';
+import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 import { MiniMap } from './MiniMap';
 import { ModeButton } from './ModeButton';
 import { ShapeRenderer } from './ShapeRenderer';

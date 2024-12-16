@@ -18,7 +18,7 @@ import {
   useFlowerMenuNode,
   useFlowerMenuStore,
   useMenuStore
-} from './storeContext';
+} from './store/context';
 import { NodeState } from './types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
