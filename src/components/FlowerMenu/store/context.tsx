@@ -34,14 +34,30 @@ export const FlowerMenuStoreProvider = ({
 
   if (store === null) {
     const newStore = createSelectors(createFlowerMenuStore(props));
-    newStore.getState().initialise();
+    const state = newStore.getState();
+    state.initialise();
 
     if (onEvent) {
-      newStore.getState().events.on('*', onEvent);
+      state.events.on('*', onEvent);
     }
     if (onNodeSelect) {
-      newStore.getState().events.on('node:select', onNodeSelect);
+      state.events.on('node:select', onNodeSelect);
     }
+
+    // used by the closeChildren helper to properly close
+    // a parent after the animations have done
+    state.events.on('node:close:force', ({ id }) => {
+      newStore.setState((prevState) => ({
+        ...prevState,
+        nodes: {
+          ...prevState.nodes,
+          [id]: {
+            ...prevState.nodes[id],
+            isOpen: false
+          }
+        }
+      }));
+    });
 
     setStore(newStore);
   }

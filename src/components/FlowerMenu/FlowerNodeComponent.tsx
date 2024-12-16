@@ -48,6 +48,7 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
   const handleNodeDragStart = useMenuStore().use.handleNodeDragStart();
   const handleNodeDragEnd = useMenuStore().use.handleNodeDragEnd();
   const isGroup = node.children?.length > 0;
+  const isChild = node.parentId !== undefined;
 
   const gesture = useGestures({
     handleNodeTap,
@@ -85,7 +86,8 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
           styles.modeButton,
           animatedStyle,
           isGroup ? styles.groupButton : {},
-          node.isActive ? styles.isActive : {}
+          node.isActive ? styles.isActive : {},
+          isChild ? styles.isChild : {}
         ]}
       >
         <MaterialIcons
@@ -185,9 +187,13 @@ const styles = StyleSheet.create({
   groupButton: {
     borderWidth: 1,
     borderColor: 'black',
-    borderStyle: 'dashed'
+    borderStyle: 'dashed',
+    zIndex: 2
   },
   isActive: {
     backgroundColor: '#999'
+  },
+  isChild: {
+    zIndex: 1
   }
 });

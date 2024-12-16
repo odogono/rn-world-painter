@@ -30,10 +30,7 @@ export const applyNodeState = (
   return state;
 };
 
-export const applyChildPositions = (
-  state: FlowerMenuStoreState,
-  nodeId: string
-) => {
+export const openChildren = (state: FlowerMenuStoreState, nodeId: string) => {
   const nodeState = state.nodes[nodeId];
 
   const { children: childIds, position } = nodeState;
@@ -52,16 +49,16 @@ export const applyChildPositions = (
     radius
   );
 
-  log.debug(
-    'startAngle',
-    (startAngle * 180) / Math.PI,
-    'endAngle',
-    (endAngle * 180) / Math.PI
-  );
+  // log.debug(
+  //   'startAngle',
+  //   (startAngle * 180) / Math.PI,
+  //   'endAngle',
+  //   (endAngle * 180) / Math.PI
+  // );
 
   const angleStep = (endAngle - startAngle) / (childIds.length - 1);
 
-  log.debug('angleStep', (angleStep * 180) / Math.PI);
+  // log.debug('angleStep', (angleStep * 180) / Math.PI);
   state = childIds.reduce((acc, childId, index) => {
     const childState = state.nodes[childId];
     if (childState) {
@@ -71,16 +68,49 @@ export const applyChildPositions = (
         y: y + Math.sin(radians) * radius
       };
 
+      // set initial position to parent
       childState.position.modify((p) => {
         'worklet';
         return { x, y };
       });
 
+      // animate to new position
       childState.position.value = withTiming(newPosition, { duration: 200 });
     }
 
     return acc;
   }, state);
+
+  state = applyNodeState(state, nodeId, 'isOpen', true);
+
+  return state;
+};
+
+export const closeChildren = (state: FlowerMenuStoreState, nodeId: string) => {
+  const duration = 200;
+  const nodeState = state.nodes[nodeId];
+
+  const { children: childIds, position } = nodeState;
+
+  if (childIds.length <= 0) {
+    return state;
+  }
+
+  const { x, y } = position.value;
+
+  childIds.forEach((childId) => {
+    const childState = state.nodes[childId];
+    if (childState) {
+      childState.position.value = withTiming({ x, y }, { duration });
+    }
+  });
+
+  // close the node after the animations have done
+  // because the state will probably be stale at that
+  // point, we must use a timeout
+  setTimeout(() => {
+    state.events.emit('node:close:force', { id: nodeId });
+  }, duration);
 
   return state;
 };
@@ -216,6 +246,11 @@ export const findAngleRange = (
   if (isTop && isRight) {
     return { startAngle: -Math.PI / 2, endAngle: 0 };
   }
+
+  return {
+    startAngle: -Math.PI / 2,
+    endAngle: Math.PI * 2 - Math.PI / 2 - 1
+  };
 };
 
 export const isRectContained = (outer: Rect2, inner: Rect2) => {

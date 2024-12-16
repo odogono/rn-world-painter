@@ -15,9 +15,10 @@ import {
   createSpatialIndex
 } from './flowerMenuSpatialIndex';
 import {
-  applyChildPositions,
   applyNodeState,
+  closeChildren,
   enforceInsetBounds,
+  openChildren,
   parseNodeKey
 } from './helpers';
 import { appStorage } from './persist';
@@ -171,16 +172,11 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
 
       // if the node has children, then toggle the isOpen status
       if (children.length > 0) {
-        let newState = applyNodeState(
-          state,
-          nodeId,
-          'isOpen',
-          !nodeState.isOpen
-        );
+        if (!nodeState.isOpen) {
+          return openChildren(state, nodeId);
+        }
 
-        newState = applyChildPositions(newState, nodeId);
-
-        return newState;
+        return closeChildren(state, nodeId);
       }
 
       // const newState = { ...nodeState, isActive: !nodeState.isActive };
