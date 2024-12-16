@@ -1,10 +1,16 @@
 import { createContext, useContext, useState } from 'react';
 
+import { makeMutable } from 'react-native-reanimated';
 import { createStore, useStore } from 'zustand';
 
 import { createLogger } from '@helpers/log';
 import { createSelectors, type WithSelectors } from '@helpers/zustand';
-import { Vector2 } from '@types';
+import { LayoutInsets, Vector2 } from '@types';
+import {
+  FlowerMenuSpatialIndex,
+  createSpatialIndex
+} from './flowerMenuSpatialIndex';
+import type { NodeState } from './types';
 
 const log = createLogger('FlowerMenuStore');
 
@@ -15,6 +21,14 @@ type Node = {
   openOnFocus?: boolean;
   children?: Node[];
 };
+
+const simpleData: Node[] = [
+  {
+    id: 'root',
+    name: 'Root',
+    icon: 'edit'
+  }
+];
 
 const data: Node[] = [
   {
@@ -114,30 +128,20 @@ const createNodeState = (node: Node, parentId?: string): NodeState => {
     id: node.id,
     name: node.name,
     icon: node.icon,
-    position: { x: 0, y: 0 },
+    position: makeMutable({ x: 430 / 2, y: 932 / 2 }),
     selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
     children: node.children?.map((child) => child.id) ?? [],
     parentId,
-    isOpen: false
+    isOpen: false,
+    bounds: { x: 0, y: 0, width: 0, height: 0 }
   };
-};
-
-export type NodeState = {
-  id: string;
-  name: string;
-  icon?: string;
-  // event name
-  action?: string;
-  position: Vector2;
-  selectedChild: number;
-  children: string[];
-  parentId?: string | undefined;
-  isOpen: boolean;
 };
 
 export interface FlowerMenuStoreProps {
   nodes: Record<string, NodeState>;
   selectedNodeId: Record<string, string>;
+  spatialIndex: FlowerMenuSpatialIndex;
+  insets: LayoutInsets;
 }
 
 export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
@@ -153,7 +157,9 @@ export interface FlowerMenuStoreState extends FlowerMenuStoreProps {
 
 const defaultProps: FlowerMenuStoreProps = {
   nodes: {},
-  selectedNodeId: {}
+  selectedNodeId: {},
+  spatialIndex: createSpatialIndex(),
+  insets: { left: 10, top: 10, right: 10, bottom: 10 }
 };
 
 export type FlowerMenuStore = ReturnType<typeof createFlowerMenuStore>;
@@ -171,7 +177,7 @@ export const createFlowerMenuStore = (
         const nodes: Record<string, NodeState> = {};
         const selectedNodeIds: Record<string, string> = {};
 
-        createNodes(data, nodes);
+        createNodes(simpleData, nodes);
 
         // set up the selected node ids
         Object.values(nodes).forEach((node) => {
@@ -222,7 +228,6 @@ export const createFlowerMenuStore = (
     handleNodeSelect: (nodeId: string) =>
       set((state) => {
         // log.debug('handleNodeSelect', nodeId);
-
         const nodeState = state.getNodeState(nodeId);
 
         if (!nodeState) {
@@ -230,6 +235,25 @@ export const createFlowerMenuStore = (
         }
 
         const { selectedChild, children } = nodeState;
+
+        // if the node has children, then toggle the isOpen status
+        if (children.length > 0) {
+          return {
+            ...state,
+            nodes: {
+              ...state.nodes,
+              [nodeId]: {
+                ...nodeState,
+                isOpen: !nodeState.isOpen
+              }
+            }
+          };
+        }
+
+        // if the node does not have children, the fire an event
+        else {
+          nodeState.action = 'select';
+        }
 
         return {
           ...state,

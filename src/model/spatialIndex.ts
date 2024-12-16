@@ -49,18 +49,18 @@ export class FeatureRBush extends RBush<BrushFeature> {
   findByIntersecting(feature: BrushFeature) {
     const bboxIntersections = this.findByBBox(feature.bbox!);
 
-    const intersectingFeatures = bboxIntersections.filter(
-      (intersectingFeature) => {
-        return booleanDisjoint(feature, intersectingFeature);
-      }
-    );
+    // const intersectingFeatures = bboxIntersections.filter(
+    //   (intersectingFeature) => {
+    //     return booleanDisjoint(feature, intersectingFeature);
+    //   }
+    // );
 
-    console.log(
-      '[findByIntersecting] intersectingFeatures',
-      intersectingFeatures.length,
-      'bboxIntersections',
-      bboxIntersections.length
-    );
+    // console.log(
+    //   '[findByIntersecting] intersectingFeatures',
+    //   intersectingFeatures.length,
+    //   'bboxIntersections',
+    //   bboxIntersections.length
+    // );
 
     return bboxIntersections;
   }

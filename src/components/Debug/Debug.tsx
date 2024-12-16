@@ -58,7 +58,7 @@ export const formatBBox = (value: BBox) => {
 
 export const Debug = () => {
   return (
-    <View style={styles.container}>
+    <View style={styles.container} pointerEvents='none'>
       <ReText style={styles.debugText} text={debugMsg} />
       <ReText style={styles.debugText} text={debugMsg2} />
       <ReText style={styles.debugText} text={debugMsg3} />

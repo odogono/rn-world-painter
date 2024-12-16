@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, LayoutRectangle, StyleSheet, View } from 'react-native';
 
 import { createLogger } from '@helpers/log';
+import type { LayoutInsets } from '@types';
 import { FlowerNodeComponent } from './FlowerNodeComponent';
 import {
   FlowerMenuStoreProvider,
@@ -12,6 +13,12 @@ import {
 const { width, height } = Dimensions.get('window');
 
 const log = createLogger('FlowerMenu');
+
+export type FlowerMenuProps = {
+  isWorldMoveEnabled: boolean;
+  onPress: () => void;
+  insets: LayoutInsets;
+};
 
 /**
  * Single tap - cycle through children
@@ -24,13 +31,11 @@ const log = createLogger('FlowerMenu');
  */
 export const FlowerMenu = ({
   isWorldMoveEnabled,
-  onPress
-}: {
-  isWorldMoveEnabled: boolean;
-  onPress: () => void;
-}) => {
+  onPress,
+  insets = { left: 10, top: 10, right: 10, bottom: 10 }
+}: FlowerMenuProps) => {
   return (
-    <FlowerMenuStoreProvider>
+    <FlowerMenuStoreProvider insets={insets}>
       <FlowerMenuContainer />
     </FlowerMenuStoreProvider>
   );

@@ -28,3 +28,10 @@ export interface BrushFeatureProperties {
 }
 
 export type BrushFeature = Feature<Polygon, BrushFeatureProperties>;
+
+export type LayoutInsets = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
