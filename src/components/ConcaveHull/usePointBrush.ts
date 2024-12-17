@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { SkPoint, Skia } from '@shopify/react-native-skia';
+import { SkPath, Skia } from '@shopify/react-native-skia';
 import Concaveman from 'concaveman';
-import { runOnJS, runOnUI, useSharedValue } from 'react-native-reanimated';
+import {
+  SharedValue,
+  runOnJS,
+  runOnUI,
+  useSharedValue
+} from 'react-native-reanimated';
 
 import { useRemoteLogContext } from '@contexts/RemoteLogContext';
 import { featureGeometryToLocal } from '@helpers/geo';
@@ -11,7 +16,8 @@ import { simplify } from '@helpers/simplify';
 import { createBrushFeature } from '@model/brushFeature';
 import { ActionType, BrushMode } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
-import { BrushFeature, Position } from '@types';
+import { BrushFeature, Position, Vector2 } from '@types';
+import { UseGestureProps } from './useGesture';
 
 const log = createLogger('usePointBrush');
 
@@ -19,9 +25,13 @@ export type UsePointBrushProps = {
   brushMode: BrushMode;
 };
 
+export type UsePointBrushResult = UseGestureProps & {
+  brushPath: SharedValue<SkPath>;
+};
+
 export const usePointBrush = ({
   brushMode = BrushMode.ADD
-}: UsePointBrushProps) => {
+}: UsePointBrushProps): UsePointBrushResult => {
   const brushPath = useSharedValue(Skia.Path.Make());
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<Position[]>([]);
@@ -54,17 +64,10 @@ export const usePointBrush = ({
     });
     log.debug('[generateConcaveHull] created brush', feature.id);
 
-    // runOnUI((feature: BrushFeature) => {
-    const featurePoints = feature.geometry.coordinates[0];
-
-    const worldPoints = screenToWorldPoints(featurePoints as Position[]);
-
+    // convert to world coordinates
+    const featurePoints = feature.geometry.coordinates[0] as Position[];
+    const worldPoints = screenToWorldPoints(featurePoints);
     feature.geometry.coordinates[0] = worldPoints;
-
-    // runOnJS(addFeature)(feature, {
-    //   updateBBox: true,
-    //   BrushMode: brushMode
-    // });
 
     applyAction({
       type: ActionType.ADD_BRUSH,
@@ -72,12 +75,6 @@ export const usePointBrush = ({
       brushMode: brushModeRef.current,
       options: { updateBBox: true }
     });
-
-    // addFeature(feature, {
-    //   updateBBox: true,
-    //   // note - for some reason, the brushMode prop does not update here
-    //   BrushMode: brushModeRef.current
-    // });
 
     return outcome;
   }, []);
@@ -89,7 +86,7 @@ export const usePointBrush = ({
     brushModeRef.current = brushMode;
   }, [brushMode]);
 
-  const addPoint = useCallback(({ x, y }: SkPoint) => {
+  const addPoint = useCallback(({ x, y }: Vector2) => {
     'worklet';
 
     const time = Date.now();
@@ -116,7 +113,7 @@ export const usePointBrush = ({
     });
   }, []);
 
-  const endBrush = useCallback(() => {
+  const onEnd = useCallback(() => {
     'worklet';
 
     // runOnJS(log.info)('endBrush', points.value.length);
@@ -131,5 +128,5 @@ export const usePointBrush = ({
     points.value = [];
   }, []);
 
-  return { brushPath, addPoint, endBrush };
+  return { brushPath, onStart: addPoint, onUpdate: addPoint, onEnd };
 };

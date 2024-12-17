@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 
-import { SkPoint } from '@shopify/react-native-skia';
 import {
   Gesture,
   GestureUpdateEvent,
@@ -14,8 +13,10 @@ import { Vector2 } from '@types';
 
 export type UseGestureProps = {
   isWorldMoveEnabled?: boolean;
-  onTap: (point: Vector2) => void;
-  onUpdate: (point: SkPoint) => void;
+  onTap?: (point: Vector2) => void;
+  onStart?: (point: Vector2) => void;
+  onChange?: (point: Vector2) => void;
+  onUpdate?: (point: Vector2) => void;
   onEnd?: () => void | undefined;
 };
 
@@ -23,11 +24,13 @@ const log = createLogger('useGesture');
 
 export const useGesture = ({
   isWorldMoveEnabled = false,
+  onStart,
+  onChange,
   onUpdate,
   onEnd,
   onTap
 }: UseGestureProps) => {
-  const { mViewPosition, mViewScale, screenToWorld, zoomOnPoint } = useStore();
+  const { mViewScale, screenToWorld, zoomOnPoint } = useStore();
 
   const startScale = useSharedValue(1);
   const startPosition = useSharedValue({ x: 0, y: 0 });
@@ -39,7 +42,9 @@ export const useGesture = ({
         .onStart(({ x, y }) => {
           const worldPos = screenToWorld({ x, y });
 
-          runOnJS(onTap)(worldPos);
+          if (onTap) {
+            runOnJS(onTap)(worldPos);
+          }
         }),
     [onTap, screenToWorld]
   );
@@ -50,46 +55,43 @@ export const useGesture = ({
         .onStart(({ x, y }) => {
           'worklet';
 
-          if (isWorldMoveEnabled) {
-            // onUpdate({ x, y });
-          } else {
-            onUpdate({ x, y });
+          startPosition.value = { x, y };
+
+          if (onStart) {
+            onStart({ x, y });
           }
           // runOnJS(log.info)('start', { x, y });
         })
         .onChange(({ changeX, changeY }) => {
           'worklet';
-          if (!isWorldMoveEnabled) {
-            return;
+          if (onChange) {
+            onChange({ x: changeX, y: changeY });
           }
+
           // const { x, y } = mViewPosition.value;
-          mViewPosition.modify((pos) => {
-            pos.x -= changeX;
-            pos.y -= changeY;
-            return pos;
-          });
+          // mViewPosition.modify((pos) => {
+          //   pos.x -= changeX;
+          //   pos.y -= changeY;
+          //   return pos;
+          // });
           // mViewPosition.value = { x: x - changeX, y: y - changeY };
         })
         .onUpdate(({ x, y }) => {
           'worklet';
           // runOnJS(log.info)('update', { x, y });
-          if (isWorldMoveEnabled) {
-            // onUpdate({ x, y });
-          } else {
+          if (onUpdate) {
             onUpdate({ x, y });
           }
         })
         .onEnd(() => {
           'worklet';
 
-          if (isWorldMoveEnabled) {
-            // onEnd?.();
-          } else {
-            onEnd?.();
+          if (onEnd) {
+            onEnd();
           }
         })
         .minDistance(10),
-    [isWorldMoveEnabled, onUpdate, onEnd]
+    [onStart, onChange, onUpdate, onEnd]
   );
 
   const pinchGesture = useMemo(

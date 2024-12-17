@@ -30,6 +30,8 @@ import { MiniMap } from './MiniMap';
 import { ShapeRenderer } from './ShapeRenderer';
 import { useGesture } from './useGesture';
 import { useMenu } from './useMenu';
+import { useMove } from './useMove';
+import { useMoveView } from './useMoveView';
 import { usePointBrush } from './usePointBrush';
 
 const log = createLogger('Painter');
@@ -55,13 +57,23 @@ export const Painter = () => {
     ]
   );
 
-  const { addPoint, brushPath, endBrush } = usePointBrush({ brushMode });
+  const selectedFeature = useStoreState().use.getSelectedFeature()();
+
+  const { brushPath, ...brushHandlers } = usePointBrush({ brushMode });
+  const moveHandlers = useMove();
+  const moveViewHandlers = useMoveView();
+
+  const gestureHandlers = selectedFeature
+    ? moveHandlers
+    : isWorldMoveEnabled
+      ? moveViewHandlers
+      : brushHandlers;
+
   const handleTap = useStoreState().use.handleTap();
   const pan = useGesture({
     isWorldMoveEnabled,
     onTap: handleTap,
-    onUpdate: addPoint,
-    onEnd: endBrush
+    ...gestureHandlers
   });
 
   useEffect(() => {

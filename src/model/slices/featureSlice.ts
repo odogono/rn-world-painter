@@ -43,6 +43,7 @@ export type FeatureSliceActions = {
   getVisibleFeatures: (bbox: BBox) => BrushFeature[];
   removeSelectedFeatures: () => void;
   handleTap: (point: Vector2) => void;
+  getSelectedFeature: () => BrushFeature | undefined;
 
   undo: () => void;
   redo: () => void;
@@ -65,6 +66,14 @@ export const createFeatureSlice: StateCreator<
   undo: () => set((state) => undoAction(state)),
 
   redo: () => set((state) => redoAction(state)),
+
+  getSelectedFeature: () => {
+    const selectedFeatures = get().selectedFeatures;
+    if (selectedFeatures.length === 0) {
+      return undefined;
+    }
+    return get().features.find((f) => f.id === selectedFeatures[0]);
+  },
 
   removeSelectedFeatures: () =>
     set((state) =>
@@ -117,7 +126,7 @@ export const createFeatureSlice: StateCreator<
         // }
       });
 
-      log.debug('[handleTap] selectedFeatures', selectedFeatures);
+      // log.debug('[handleTap] selectedFeatures', selectedFeatures);
 
       return { ...state, selectedFeatures };
     })
