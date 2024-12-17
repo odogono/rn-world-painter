@@ -210,11 +210,8 @@ const initialiser = (props?: Partial<FlowerMenuStoreProps>) => (set, get) => ({
       let newState = state;
       Object.entries(props).forEach(([key, value]) => {
         const { id, prop } = parseNodeKey(key);
-        log.debug('[applyNodeProps]', key, id, prop, value);
-
         newState = applyNodeState(newState, id, prop, value);
       });
-      // log.debug('[applyNodeProps] newState', newState);
       return newState;
     }),
 

@@ -13,20 +13,40 @@ export const POLYCLIP_RESULT_UNCHANGED = 0;
 export const applyFeatureUnion = (
   featureA: BrushFeature,
   featureB: BrushFeature
-): [number, BrushFeature[]] => {
+): [number, BrushFeature | null] => {
   const poly1: Geom = featureA.geometry.coordinates as Geom;
   const poly2: Geom = featureB.geometry.coordinates as Geom;
 
   const diff = polyclip.union(poly1, poly2);
 
-  const result: BrushFeature[] = [];
+  // const result: BrushFeature[] = [];
 
-  diff.forEach((poly) => {
-    const feature = createBrushFeature({ coordinates: poly });
-    result.push(feature);
+  if (diff.length === 0) {
+    return [0, null];
+  }
+
+  if (diff.length > 1) {
+    log.warn('[applyFeatureUnion] result', diff.length);
+    return [0, null];
+  }
+
+  // diff.forEach((poly) => {
+  const feature = createBrushFeature({
+    coordinates: diff[0],
+    id: featureB.id! as string
   });
+  log.debug(
+    '[applyFeatureUnion] created brush',
+    feature.id,
+    'from',
+    featureA.id,
+    'and',
+    featureB.id
+  );
+  // result.push(feature);
+  // });
 
-  return [result.length, result];
+  return [1, feature];
 };
 
 export const applyFeatureDifference = (

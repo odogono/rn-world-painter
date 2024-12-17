@@ -31,33 +31,47 @@ export type FlowerMenuProps = {
  */
 export const FlowerMenu = ({ viewLayout, ...nodeProps }: FlowerMenuProps) => {
   const nodeIds = useMenuStore().use.getVisibleNodeIds()();
-  // const selectedNodeIds = useFlowerMenuStore((s) => s.nodes);
-  const applyNodeProps = useFlowerMenuStore((s) => s.applyNodeProps);
-  const setViewLayout = useFlowerMenuStore((s) => s.setViewLayout);
+
+  // this is used to trigger a re-render when the nodes change
+  // otherwise opening/closing parents does not trigger a re-render
+  useMenuStore().use.nodes();
+
+  const applyNodeProps = useMenuStore().use.applyNodeProps();
+  // const applyNodeProps = useFlowerMenuStore((s) => s.applyNodeProps);
+  const setViewLayout = useMenuStore().use.setViewLayout();
+  // const setViewLayout = useFlowerMenuStore((s) => s.setViewLayout);
 
   const nodePropStr = JSON.stringify(nodeProps);
 
   useEffect(() => {
     applyNodeProps(nodeProps);
-    log.debug('applyNodeProps', nodeProps);
+    // log.debug('applyNodeProps', nodeProps);
   }, [nodePropStr]);
 
   useEffect(() => {
     if (viewLayout) {
       setViewLayout(viewLayout);
     }
-    log.debug('viewLayout', viewLayout);
+    // log.debug('viewLayout', viewLayout);
   }, [viewLayout]);
 
   // log.debug('FlowerMenu', nodeProps);
   // useEffect(() => {
+  //   log.debug('nodeIds changed', nodeIds);
   //   // nodeIds.forEach((id) => {
   //   //   const selected = selectedNodeIds[id];
   //   //   log.debug(id, selected.children[selected.selectedChild]);
   //   // });
-  // }, [nodeIds, selectedNodeIds]);
+  // }, [nodeIds]);
+  // useEffect(() => {
+  //   log.debug('nodes changed', Object.keys(nodes));
+  //   // nodeIds.forEach((id) => {
+  //   //   const selected = selectedNodeIds[id];
+  //   //   log.debug(id, selected.children[selected.selectedChild]);
+  //   // });
+  // }, [nodes]);
 
-  // log.debug('FlowerMenuContainer rendered', nodeIds);
+  // log.debug('rendered', nodeIds);
   return (
     <View style={styles.container}>
       {nodeIds.map((id) => (

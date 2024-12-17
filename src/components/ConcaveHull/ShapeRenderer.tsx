@@ -7,7 +7,7 @@ import { createLogger } from '@helpers/log';
 import { useStoreState } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature } from '@types';
-import { setDebugMsg4, setDebugMsg5 } from '../Debug/Debug';
+import { setDebugMsg3, setDebugMsg4, setDebugMsg5 } from '../Debug/Debug';
 
 const log = createLogger('ShapeRenderer');
 
@@ -48,8 +48,8 @@ export const ShapeRenderer = () => {
       if (visibleIds !== visibleTileIdsRef.current) {
         visibleTileIdsRef.current = visibleIds;
         setVisibleFeatures(visibleFeatures);
-        setDebugMsg4(`visibleFeatures: ${visibleFeatures.length}`);
-        setDebugMsg5(`selectedFeatures: ${selectedFeatures.length}`);
+        setDebugMsg3(`visibleFeatures: ${visibleFeatures.length}`);
+        setDebugMsg4(`selectedFeatures: ${selectedFeatures}`);
       }
     },
     [selectedFeatures]

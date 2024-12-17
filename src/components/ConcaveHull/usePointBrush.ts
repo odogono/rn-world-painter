@@ -9,23 +9,23 @@ import { featureGeometryToLocal } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { simplify } from '@helpers/simplify';
 import { createBrushFeature } from '@model/brushFeature';
-import { ActionType, ApplyOperation } from '@model/types';
+import { ActionType, BrushMode } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
 import { BrushFeature, Position } from '@types';
 
 const log = createLogger('usePointBrush');
 
 export type UsePointBrushProps = {
-  brushMode: ApplyOperation;
+  brushMode: BrushMode;
 };
 
 export const usePointBrush = ({
-  brushMode = ApplyOperation.ADD
+  brushMode = BrushMode.ADD
 }: UsePointBrushProps) => {
   const brushPath = useSharedValue(Skia.Path.Make());
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<Position[]>([]);
-  const brushModeRef = useRef(brushMode);
+  const brushModeRef = useRef<BrushMode>(brushMode);
 
   const rlog = useRemoteLogContext();
   const { screenToWorldPoints } = useStore();
@@ -52,6 +52,7 @@ export const usePointBrush = ({
       points: simplified,
       isLocal: false
     });
+    log.debug('[generateConcaveHull] created brush', feature.id);
 
     // runOnUI((feature: BrushFeature) => {
     const featurePoints = feature.geometry.coordinates[0];
@@ -62,20 +63,20 @@ export const usePointBrush = ({
 
     // runOnJS(addFeature)(feature, {
     //   updateBBox: true,
-    //   applyOperation: brushMode
+    //   BrushMode: brushMode
     // });
 
     applyAction({
       type: ActionType.ADD_BRUSH,
       feature,
-      apply: brushModeRef.current,
+      brushMode: brushModeRef.current,
       options: { updateBBox: true }
     });
 
     // addFeature(feature, {
     //   updateBBox: true,
     //   // note - for some reason, the brushMode prop does not update here
-    //   applyOperation: brushModeRef.current
+    //   BrushMode: brushModeRef.current
     // });
 
     return outcome;

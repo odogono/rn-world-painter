@@ -1,11 +1,12 @@
 import { Position as GeoJsonPosition, Polygon } from 'geojson';
 
 import { getBBoxCenter } from '@helpers/geo';
-import { generateUUID } from '@helpers/uuid';
+import { generateShortUUID, generateUUID } from '@helpers/uuid';
 import { bbox as calculateBbox } from '@turf/bbox';
 import { BrushFeature, Position } from '@types';
 
 export type CreateBrushFeatureOptions = {
+  id?: string;
   points?: Position[] | GeoJsonPosition[];
   coordinates?: GeoJsonPosition[][];
   isLocal?: boolean;
@@ -13,6 +14,7 @@ export type CreateBrushFeatureOptions = {
 };
 
 export const createBrushFeature = ({
+  id = generateShortUUID(),
   isLocal = false,
   points,
   coordinates,
@@ -26,7 +28,7 @@ export const createBrushFeature = ({
   const bbox = calculateBbox(geometry);
   const center = getBBoxCenter(bbox);
 
-  const id = generateUUID();
+  // const id = generateShortUUID();
 
   // calculate the center of the bbox
   // const center: Position = [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];

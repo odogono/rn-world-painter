@@ -9,42 +9,33 @@ export const ActionType = {
 
 export type ActionType = (typeof ActionType)[keyof typeof ActionType];
 
-export const ApplyOperation = {
+export const BrushMode = {
   ADD: 'add',
   SUBTRACT: 'subtract',
   INTERSECT: 'intersect'
 } as const;
 
-export type ApplyOperation =
-  (typeof ApplyOperation)[keyof typeof ApplyOperation];
+export type BrushMode = (typeof BrushMode)[keyof typeof BrushMode];
 
 export type AddBrushAction = {
   type: typeof ActionType.ADD_BRUSH;
-  apply: ApplyOperation;
+  brushMode: BrushMode;
   feature: BrushFeature;
   options?: AddFeatureOptions;
 };
 
 export type RemoveBrushAction = {
   type: typeof ActionType.REMOVE_BRUSH;
-  featureId: string;
+  featureIds: string[];
 };
 
-export type RemoveSelectedAction = {
-  type: typeof ActionType.REMOVE_SELECTED;
-};
-
-// export type Action = {
-//   featureId?: string;
-//   type: ActionType;
-//   apply: ApplyOperation;
-//   feature?: BrushFeature;
-//   options?: Partial<AddFeatureOptions>;
+// export type RemoveSelectedAction = {
+//   type: typeof ActionType.REMOVE_SELECTED;
 // };
 
 export type Action = AddBrushAction | RemoveBrushAction;
 
 export type AddFeatureOptions = {
   updateBBox?: boolean;
-  applyOperation?: ApplyOperation;
+  brushMode?: BrushMode;
 };

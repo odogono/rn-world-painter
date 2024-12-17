@@ -56,13 +56,6 @@ export const openChildren = (
     radius
   );
 
-  // log.debug(
-  //   'startAngle',
-  //   (startAngle * 180) / Math.PI,
-  //   'endAngle',
-  //   (endAngle * 180) / Math.PI
-  // );
-
   const angleStep = (endAngle - startAngle) / (childIds.length - 1);
 
   // log.debug('angleStep', (angleStep * 180) / Math.PI);

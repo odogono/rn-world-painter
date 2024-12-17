@@ -7,21 +7,17 @@ import {
   coordinatesToString
 } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
-import {
-  POLYCLIP_RESULT_UNCHANGED,
-  applyFeatureDifference,
-  applyFeatureIntersection,
-  applyFeatureUnion
-} from '@helpers/polyclip';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
 import {
   Action,
   ActionType,
+  AddBrushAction,
   AddFeatureOptions,
-  ApplyOperation
+  BrushMode,
+  RemoveBrushAction
 } from '../types';
-import { addFeature } from './featureHelpers';
+import { addFeature, removeFeatures } from './featureHelpers';
 
 export type FeatureSliceProps = {
   features: BrushFeature[];
@@ -64,87 +60,27 @@ export const createFeatureSlice: StateCreator<
 > = (set, get) => ({
   ...defaultState,
 
-  // addFeature: (feature: BrushFeature, options: AddFeatureOptions = {}) => {
-  //   set((state) => {
-  //     const features = [...state.features];
+  applyAction: (action: Action) => set((state) => applyAction(state, action)),
 
-  //     if (options.updateBBox) {
-  //       feature.bbox = calculateBBox(feature.geometry);
-  //     }
+  undo: () => set((state) => undoAction(state)),
 
-  //     if (options.applyOperation === ApplyOperation.ADD) {
-  //       const [addedCount, removedCount, updatedFeatures] = applyAddition(
-  //         feature,
-  //         state.spatialIndex,
-  //         features
-  //       );
+  redo: () => set((state) => redoAction(state)),
 
-  //       log.debug('[addFeature] applyAddition added', addedCount);
-  //       log.debug('[addFeature] applyAddition removed', removedCount);
+  removeSelectedFeatures: () =>
+    set((state) =>
+      applyAction(state, {
+        type: ActionType.REMOVE_BRUSH,
+        featureIds: state.selectedFeatures
+      })
+    ),
 
-  //       if (addedCount > 0 || removedCount > 0) {
-  //         return { ...state, features: updatedFeatures };
-  //       }
-
-  //       state.spatialIndex.insert(feature);
-  //       features.push(feature);
-
-  //       return { ...state, features };
-  //     } else if (options.applyOperation === ApplyOperation.SUBTRACT) {
-  //       const timeMs = performance.now();
-
-  //       const [addedCount, removedCount, updatedFeatures] = applySubtraction(
-  //         feature,
-  //         state.spatialIndex,
-  //         features
-  //       );
-
-  //       log.debug(
-  //         '[addFeature] applySubtraction added',
-  //         addedCount,
-  //         'removed',
-  //         removedCount,
-  //         'new features',
-  //         performance.now() - timeMs
-  //       );
-
-  //       if (addedCount > 0 || removedCount > 0) {
-  //         return { ...state, features: updatedFeatures };
-  //       }
-  //     }
-
-  //     state.spatialIndex.insert(feature);
-  //     features.push(feature);
-
-  //     return { ...state, features };
-  //   });
-  // },
-
-  removeSelectedFeatures: () => {
-    set((state) => {
-      const selectedFeatures = state.selectedFeatures;
-
-      const featuresToRemove = state.features.filter((f) =>
-        selectedFeatures.find((id) => id === f.id)
-      );
-      const featuresRemaining = state.features.filter(
-        (f) => !selectedFeatures.find((id) => id === f.id)
-      );
-
-      featuresToRemove.forEach((f) => state.spatialIndex.remove(f));
-      return { ...state, features: featuresRemaining, selectedFeatures: [] };
-    });
-  },
-
-  removeFeature: (feature: BrushFeature) => {
-    set((state) => {
-      state.spatialIndex.remove(feature);
-      return {
-        ...state,
-        features: state.features.filter((f) => f.id !== feature.id)
-      };
-    });
-  },
+  removeFeature: (feature: BrushFeature) =>
+    set((state) =>
+      applyAction(state, {
+        type: ActionType.REMOVE_BRUSH,
+        featureIds: [feature.id! as string]
+      })
+    ),
 
   resetFeatures: () => {
     get().spatialIndex.clear();
@@ -184,80 +120,6 @@ export const createFeatureSlice: StateCreator<
       log.debug('[handleTap] selectedFeatures', selectedFeatures);
 
       return { ...state, selectedFeatures };
-    }),
-
-  applyAction: (action: Action) =>
-    set((state) => {
-      state = applyAction(state, action);
-
-      // add the action to the undo stack
-      state = {
-        ...state,
-        undoStack: [...state.undoStack, action],
-        redoStack: []
-      };
-
-      return state;
-    }),
-
-  // replayActions: () =>
-  //   set((state) => {
-  //     // clear everything
-  //     const newState = { ...state, features: [], selectedFeatures: [] };
-  //     newState.spatialIndex.clear();
-
-  //     state.undoStack.reduce<FeatureSlice>((state, action) => {
-  //       return applyAction(state, action);
-  //     }, newState);
-
-  //     return newState;
-  //   }),
-
-  undo: () =>
-    set((state) => {
-      // pop the last action from the undo stack
-      const action = state.undoStack.pop();
-
-      if (!action) {
-        return state;
-      }
-
-      // add the action to the redo stack
-      state = { ...state, redoStack: [...state.redoStack, action] };
-
-      state = replayActions(state);
-
-      log.debug(
-        '[undo] undo stack',
-        state.undoStack.length,
-        'redo stack',
-        state.redoStack.length
-      );
-
-      return state;
-    }),
-  redo: () =>
-    set((state) => {
-      // pop the last action from the redo stack
-      const action = state.redoStack.pop();
-
-      if (!action) {
-        return state;
-      }
-
-      // add the action to the undo stack
-      state = { ...state, undoStack: [...state.undoStack, action] };
-
-      state = applyAction(state, action);
-
-      log.debug(
-        '[redo] undo stack',
-        state.undoStack.length,
-        'redo stack',
-        state.redoStack.length
-      );
-
-      return state;
     })
 });
 
@@ -267,17 +129,114 @@ const replayActions = (state: FeatureSlice) => {
   newState.spatialIndex.clear();
 
   return state.undoStack.reduce<FeatureSlice>((state, action) => {
-    return applyAction(state, action);
+    return applyActionInternal(state, action);
   }, newState);
 };
 
 const applyAction = (state: FeatureSlice, action: Action) => {
+  state = applyActionInternal(state, action);
+
+  // add the action to the undo stack
+  state = {
+    ...state,
+    undoStack: [...state.undoStack, action],
+    redoStack: []
+  };
+
+  printHistory(state);
+
+  return state;
+};
+
+const undoAction = (state: FeatureSlice) => {
+  // pop the last action from the undo stack
+  const action = state.undoStack.pop();
+
+  if (!action) {
+    return state;
+  }
+
+  // add the action to the redo stack
+  state = { ...state, redoStack: [...state.redoStack, action] };
+
+  state = replayActions(state);
+
+  log.debug(
+    '[undo] undo stack',
+    state.undoStack.length,
+    'redo stack',
+    state.redoStack.length
+  );
+
+  printHistory(state);
+
+  return state;
+};
+
+const redoAction = (state: FeatureSlice) => {
+  // pop the last action from the redo stack
+  const action = state.redoStack.pop();
+
+  if (!action) {
+    return state;
+  }
+
+  // add the action to the undo stack
+  state = { ...state, undoStack: [...state.undoStack, action] };
+
+  state = applyActionInternal(state, action);
+
+  printHistory(state);
+
+  return state;
+};
+
+const applyActionInternal = (state: FeatureSlice, action: Action) => {
   switch (action.type) {
     case ActionType.ADD_BRUSH:
-      return addFeature(state, action.feature!, action.options);
+      return addFeature({
+        state,
+        brushMode: action.brushMode,
+        feature: action.feature,
+        options: action.options ?? {}
+      });
+    case ActionType.REMOVE_BRUSH:
+      return removeFeatures(state, action.featureIds);
     default:
       return state;
   }
+};
+
+const printHistory = (state: FeatureSlice) => {
+  state.undoStack.forEach((action, ii) => {
+    log.debug('[undo]', ii, actionToString(action));
+  });
+  if (state.undoStack.length === 0) {
+    log.debug('[undo] empty');
+  }
+  state.redoStack.forEach((action, ii) => {
+    log.debug('[redo]', ii, actionToString(action));
+  });
+  if (state.redoStack.length === 0) {
+    log.debug('[redo] empty');
+  }
+};
+
+const actionToString = (action: Action) => {
+  if (action.type === ActionType.ADD_BRUSH) {
+    return addBrushActionToString(action as AddBrushAction);
+  } else if (action.type === ActionType.REMOVE_BRUSH) {
+    return removeBrushActionToString(action as RemoveBrushAction);
+  }
+  return '';
+};
+
+const addBrushActionToString = (action: AddBrushAction) => {
+  return `${action.type} ${action.brushMode} ${action.feature?.id}`;
+};
+
+const removeBrushActionToString = (action: RemoveBrushAction) => {
+  return `${action.type} ${action.featureIds.join(', ')}`;
 };
 
 // const applySubtractionToFeatures = (

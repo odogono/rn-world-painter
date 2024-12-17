@@ -26,7 +26,7 @@ import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
 import { useEvents } from '@contexts/Events';
 import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
-import { ActionType, ApplyOperation } from '@model/types';
+import { ActionType, BrushMode } from '@model/types';
 import {
   useStore,
   useStoreSelector,
@@ -48,9 +48,7 @@ export const Painter = () => {
   const ContextBridge = useContextBridge();
   const canvasRef = useCanvasRef();
   const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(false);
-  const [brushMode, setBrushMode] = useState<ApplyOperation>(
-    ApplyOperation.ADD
-  );
+  const [brushMode, setBrushMode] = useState<BrushMode>(BrushMode.ADD);
   const { addPoint, brushPath, endBrush } = usePointBrush({ brushMode });
   const setViewLayout = useStoreSetViewLayout();
   const viewLayout = useStoreViewLayout();
@@ -96,10 +94,10 @@ export const Painter = () => {
         zoomOnPoint({ toScale: 1 });
         break;
       case 'brushAdd':
-        setBrushMode(ApplyOperation.ADD);
+        setBrushMode(BrushMode.ADD);
         break;
       case 'brushRemove':
-        setBrushMode(ApplyOperation.SUBTRACT);
+        setBrushMode(BrushMode.SUBTRACT);
         break;
       case 'brushDelete':
         removeSelectedFeatures();
@@ -117,12 +115,12 @@ export const Painter = () => {
     applyAction({
       type: ActionType.ADD_BRUSH,
       feature: testFeature as BrushFeature,
-      apply: ApplyOperation.ADD
+      brushMode: BrushMode.ADD
     });
     applyAction({
       type: ActionType.ADD_BRUSH,
       feature: testFeature2 as BrushFeature,
-      apply: ApplyOperation.ADD
+      brushMode: BrushMode.ADD
     });
 
     return () => {
@@ -138,9 +136,8 @@ export const Painter = () => {
         BBox
       ],
     ([position, scale, bbox]) => {
-      setDebugMsg1(formatVector2(position));
-      setDebugMsg2(scale.toString());
-      setDebugMsg3(formatBBox(bbox));
+      setDebugMsg1(`${formatVector2(position)} ${scale.toString()}`);
+      setDebugMsg2(`${formatBBox(bbox)}`);
     }
   );
 
@@ -198,8 +195,8 @@ export const Painter = () => {
           viewLayout={viewLayout}
           editNodeIsActive={!isWorldMoveEnabled}
           panNodeIsActive={isWorldMoveEnabled}
-          brushAddNodeIsActive={brushMode === ApplyOperation.ADD}
-          brushRemoveNodeIsActive={brushMode === ApplyOperation.SUBTRACT}
+          brushAddNodeIsActive={brushMode === BrushMode.ADD}
+          brushRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
         />
         {/* <ZoomControls /> */}
 

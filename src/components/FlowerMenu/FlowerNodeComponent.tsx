@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -117,49 +117,51 @@ const useGestures = ({
   const translation = useSharedValue<Vector2>({ x: 0, y: 0 });
   const { id: nodeId, position } = node;
 
-  const singleTap = Gesture.Tap()
-    .maxDuration(250)
-    .onStart(() => {
-      runOnJS(handleNodeTap)(nodeId);
-      runOnJS(log.debug)('single tap');
-    });
-
-  const doubleTap = Gesture.Tap()
-    .numberOfTaps(2)
-    .onEnd((event, success) => {
-      'worklet';
-      runOnJS(log.debug)(`double tap ${success}?`);
-    });
-
-  // const longPress = Gesture.LongPress()
-  //   .minDuration(500)
-  //   .onStart(() => {
-  //     'worklet';
-  //     runOnJS(log.debug)('long press start');
-  //   })
-  //   .onEnd((event, success) =>
-  //     runOnJS(log.debug)(`long press ${success}? ${event.duration}`)
-  //   );
-
-  const drag = Gesture.Pan()
-    .onStart(() => {
-      'worklet';
-      translation.value = { x: position.value.x, y: position.value.y };
-      runOnJS(handleNodeDragStart)(nodeId);
-    })
-    .onUpdate(({ translationX, translationY }) => {
-      position.modify((p) => {
-        p.x = translation.value.x + translationX;
-        p.y = translation.value.y + translationY;
-        return p;
+  const gesture = useMemo(() => {
+    const singleTap = Gesture.Tap()
+      .maxDuration(250)
+      .onStart(() => {
+        runOnJS(handleNodeTap)(nodeId);
+        // runOnJS(log.debug)('single tap');
       });
-    })
-    .onEnd(() => {
-      runOnJS(handleNodeDragEnd)(nodeId);
-    })
-    .minDistance(2);
 
-  const gesture = Gesture.Exclusive(doubleTap, singleTap, drag);
+    // const doubleTap = Gesture.Tap()
+    //   .numberOfTaps(2)
+    //   .onEnd((event, success) => {
+    //     'worklet';
+    //     runOnJS(log.debug)(`double tap ${success}?`);
+    //   });
+
+    // const longPress = Gesture.LongPress()
+    //   .minDuration(500)
+    //   .onStart(() => {
+    //     'worklet';
+    //     runOnJS(log.debug)('long press start');
+    //   })
+    //   .onEnd((event, success) =>
+    //     runOnJS(log.debug)(`long press ${success}? ${event.duration}`)
+    //   );
+
+    const drag = Gesture.Pan()
+      .onStart(() => {
+        'worklet';
+        translation.value = { x: position.value.x, y: position.value.y };
+        runOnJS(handleNodeDragStart)(nodeId);
+      })
+      .onUpdate(({ translationX, translationY }) => {
+        position.modify((p) => {
+          p.x = translation.value.x + translationX;
+          p.y = translation.value.y + translationY;
+          return p;
+        });
+      })
+      .onEnd(() => {
+        runOnJS(handleNodeDragEnd)(nodeId);
+      })
+      .minDistance(2);
+
+    return Gesture.Exclusive(singleTap, drag);
+  }, [nodeId]);
 
   return gesture;
 };
