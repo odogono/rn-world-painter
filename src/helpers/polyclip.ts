@@ -35,14 +35,14 @@ export const applyFeatureUnion = (
     coordinates: diff[0],
     id: featureB.id! as string
   });
-  log.debug(
-    '[applyFeatureUnion] created brush',
-    feature.id,
-    'from',
-    featureA.id,
-    'and',
-    featureB.id
-  );
+  // log.debug(
+  //   '[applyFeatureUnion] created brush',
+  //   feature.id,
+  //   'from',
+  //   featureA.id,
+  //   'and',
+  //   featureB.id
+  // );
   // result.push(feature);
   // });
 

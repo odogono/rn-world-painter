@@ -1,26 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import {
-  Canvas,
-  Group,
-  Path,
-  Rect,
-  SkPath,
-  Skia,
-  useCanvasRef
-} from '@shopify/react-native-skia';
+import { Canvas, Group, Path, useCanvasRef } from '@shopify/react-native-skia';
 import { useContextBridge } from 'its-fine';
 import { GestureDetector } from 'react-native-gesture-handler';
-import { useAnimatedReaction, useDerivedValue } from 'react-native-reanimated';
+import { useAnimatedReaction } from 'react-native-reanimated';
 
 import {
   Debug,
   formatBBox,
   formatVector2,
   setDebugMsg1,
-  setDebugMsg2,
-  setDebugMsg3
+  setDebugMsg2
 } from '@components/Debug/Debug';
 import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
 import { useEvents } from '@contexts/Events';
@@ -34,12 +25,11 @@ import {
   useStoreState,
   useStoreViewLayout
 } from '@model/useStore';
-import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature, Vector2 } from '@types';
-import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 import { MiniMap } from './MiniMap';
 import { ShapeRenderer } from './ShapeRenderer';
 import { useGesture } from './useGesture';
+import { useMenu } from './useMenu';
 import { usePointBrush } from './usePointBrush';
 
 const log = createLogger('Painter');
@@ -47,17 +37,14 @@ const log = createLogger('Painter');
 export const Painter = () => {
   const ContextBridge = useContextBridge();
   const canvasRef = useCanvasRef();
-  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(false);
-  const [brushMode, setBrushMode] = useState<BrushMode>(BrushMode.ADD);
-  const { addPoint, brushPath, endBrush } = usePointBrush({ brushMode });
+
+  const { MenuProvider, isWorldMoveEnabled, brushMode } = useMenu();
+
   const setViewLayout = useStoreSetViewLayout();
   const viewLayout = useStoreViewLayout();
-  const { zoomOnPoint } = useStore();
-  const { resetFeatures, handleTap } = useStoreActions();
+
+  const resetFeatures = useStoreState().use.resetFeatures();
   const applyAction = useStoreState().use.applyAction();
-  const removeSelectedFeatures = useStoreState().use.removeSelectedFeatures();
-  const undo = useStoreState().use.undo();
-  const redo = useStoreState().use.redo();
 
   const [mViewMatrix, mViewPosition, mViewScale, mViewBBox] = useStoreSelector(
     (state) => [
@@ -68,48 +55,14 @@ export const Painter = () => {
     ]
   );
 
+  const { addPoint, brushPath, endBrush } = usePointBrush({ brushMode });
+  const handleTap = useStoreState().use.handleTap();
   const pan = useGesture({
     isWorldMoveEnabled,
     onTap: handleTap,
     onUpdate: addPoint,
     onEnd: endBrush
   });
-
-  const onNodeSelect = useCallback(({ id }: { id: string }) => {
-    log.debug('[Painter][onNodeSelect]', id);
-    switch (id) {
-      case 'edit':
-        setIsWorldMoveEnabled(false);
-        break;
-      case 'pan':
-        setIsWorldMoveEnabled(true);
-        break;
-      case 'zoomIn':
-        zoomOnPoint({ zoomFactor: 4 });
-        break;
-      case 'zoomOut':
-        zoomOnPoint({ zoomFactor: 0.5 });
-        break;
-      case 'reset':
-        zoomOnPoint({ toScale: 1 });
-        break;
-      case 'brushAdd':
-        setBrushMode(BrushMode.ADD);
-        break;
-      case 'brushRemove':
-        setBrushMode(BrushMode.SUBTRACT);
-        break;
-      case 'brushDelete':
-        removeSelectedFeatures();
-        break;
-      case 'undo':
-        undo();
-        break;
-      case 'redo':
-        redo();
-        break;
-    }
-  }, []);
 
   useEffect(() => {
     applyAction({
@@ -158,11 +111,7 @@ export const Painter = () => {
 
   return (
     <View style={styles.container}>
-      <FlowerMenuStoreProvider
-        insets={{ left: 10, top: 64, right: 10, bottom: 50 }}
-        // onEvent={onFlowerMenuEvent}
-        onNodeSelect={onNodeSelect}
-      >
+      <MenuProvider>
         <GestureDetector gesture={pan}>
           <Canvas
             style={styles.canvas}
@@ -174,14 +123,7 @@ export const Painter = () => {
           >
             <ContextBridge>
               <Group matrix={mViewMatrix}>
-                {/* <Rect x={-15} y={-15} width={30} height={30} color='red' />
-              <Rect x={-15} y={-15 + 60} width={30} height={30} color='black' /> */}
-
                 <ShapeRenderer />
-
-                {/* <Group matrix={shapeMatrix}>
-              <Path path={hullPath} color='#444' />
-            </Group> */}
               </Group>
 
               <MiniMap />
@@ -198,10 +140,9 @@ export const Painter = () => {
           brushAddNodeIsActive={brushMode === BrushMode.ADD}
           brushRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
         />
-        {/* <ZoomControls /> */}
 
         <Debug />
-      </FlowerMenuStoreProvider>
+      </MenuProvider>
     </View>
   );
 };

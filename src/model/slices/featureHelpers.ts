@@ -56,8 +56,8 @@ export const addFeature = ({
       features
     );
 
-    log.debug('[addFeature] applyAddition added', addedCount);
-    log.debug('[addFeature] applyAddition removed', removedCount);
+    // log.debug('[addFeature] applyAddition added', addedCount);
+    // log.debug('[addFeature] applyAddition removed', removedCount);
 
     if (addedCount > 0 || removedCount > 0) {
       return { ...state, features: updatedFeatures };
@@ -118,17 +118,6 @@ const applyAddition = (
     return unionFeature;
   }, brush);
 
-  // intersectingFeatures.forEach((feature) => {
-  //   const [result, unionFeature] = applyFeatureUnion(feature, brush);
-  //   removeFeatures.push(feature);
-  //   log.debug('[applyAddition] remove', feature.id);
-  //   newFeatures.push(...features);
-  //   log.debug(
-  //     '[applyAddition] add',
-  //     features.map((f) => f.id)
-  //   );
-  // });
-
   // remote the existing features
   removeFeatures.forEach((feature) => {
     spatialIndex.remove(feature);
@@ -139,12 +128,6 @@ const applyAddition = (
     spatialIndex.insert(addition);
     features.push(addition);
   }
-
-  // add the new features
-  // newFeatures.forEach((feature) => {
-  //   spatialIndex.insert(feature);
-  //   features.push(feature);
-  // });
 
   return [addition ? 1 : 0, removeFeatures.length, features];
 };
