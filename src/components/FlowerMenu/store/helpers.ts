@@ -1,10 +1,13 @@
-import { LayoutRectangle } from 'react-native';
+import { Dimensions, LayoutRectangle } from 'react-native';
 
 import { withTiming } from 'react-native-reanimated';
 
 import { createLogger } from '@helpers/log';
 import { LayoutInsets, Rect2, Vector2 } from '@types';
+import { Vector2WithLayout } from '../types';
 import type { FlowerMenuStoreState } from './store';
+
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
 const log = createLogger('FlowerMenuHelpers');
 
@@ -300,4 +303,55 @@ export const parseNodeKey = (input: string) => {
     id,
     prop: formattedProp
   };
+};
+
+export const parseVector2WithLayout = (position?: Vector2WithLayout) => {
+  if (!position) {
+    return { x: -100, y: -100 };
+  }
+
+  const { x: inputX, y: inputY } = position;
+
+  return {
+    x: parseLayoutPosition(inputX),
+    y: parseLayoutPosition(inputY)
+  };
+};
+
+const directionPattern = /^(top|bottom|left|right|vcenter|hcenter)([\+\-]\d+)$/;
+export const parseLayoutPosition = (input: string | number) => {
+  if (typeof input === 'number') {
+    return input;
+  }
+
+  const match = input.match(directionPattern);
+
+  if (!match) {
+    return 0;
+  }
+
+  const [_, direction, valueStr] = match;
+
+  const value = parseInt(valueStr, 10);
+  let result = 0;
+
+  switch (direction) {
+    case 'vcenter':
+      result = windowHeight / 2 + value;
+      break;
+    case 'hcenter':
+      result = windowWidth / 2 + value;
+      break;
+    case 'bottom':
+      result = windowHeight + value;
+      break;
+    case 'right':
+      result = windowWidth + value;
+      break;
+    default:
+      result = value;
+      break;
+  }
+
+  return result;
 };

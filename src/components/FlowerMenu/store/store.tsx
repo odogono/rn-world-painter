@@ -1,4 +1,4 @@
-import { LayoutRectangle } from 'react-native';
+import { Dimensions, LayoutRectangle } from 'react-native';
 
 import mitt, { Emitter } from 'mitt';
 import { makeMutable, withTiming } from 'react-native-reanimated';
@@ -7,7 +7,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { createLogger } from '@helpers/log';
 import { LayoutInsets, Rect2, Vector2 } from '@types';
-import { Node, NodeState } from '../types';
+import { Node, NodeState, Vector2WithLayout } from '../types';
 import { menuData } from './data';
 import type { FlowerMenuEvents } from './events';
 import {
@@ -19,7 +19,8 @@ import {
   closeChildren,
   enforceInsetBounds,
   openChildren,
-  parseNodeKey
+  parseNodeKey,
+  parseVector2WithLayout
 } from './helpers';
 import { appStorage } from './persist';
 
@@ -228,7 +229,7 @@ const createNodeState = (node: Node, parentId?: string): NodeState => {
     name: node.name,
     icon: node.icon,
     action: node.action,
-    position: makeMutable(node.position ?? { x: -10, y: -10 }),
+    position: makeMutable(parseVector2WithLayout(node.position)),
     selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
     children: node.children?.map((child) => child.id) ?? [],
     parentId,

@@ -6,7 +6,7 @@ export const menuData: Node[] = [
     name: 'Brush',
     icon: 'brush',
     isOpen: true,
-    position: { x: 10, y: 356 },
+    position: { x: 'left+10', y: 'vcenter-30' },
     children: [
       {
         id: 'brushAdd',
@@ -24,7 +24,7 @@ export const menuData: Node[] = [
     id: 'visibility',
     name: 'Visibility',
     icon: 'visibility',
-    position: { x: 361, y: 560 },
+    position: { x: 'right-80', y: 'vcenter+80' },
     children: [
       {
         id: 'zoomIn',
@@ -47,7 +47,7 @@ export const menuData: Node[] = [
     id: 'history',
     name: 'History',
     icon: 'history',
-    position: { x: 361, y: 356 },
+    position: { x: 'right-80', y: 'vcenter-80' },
     children: [
       {
         id: 'undo',
@@ -68,13 +68,13 @@ export const menuData: Node[] = [
     name: 'Edit',
     icon: 'edit',
     action: 'edit',
-    position: { x: 361, y: 835 }
+    position: { x: 'right-80', y: 'bottom-80' }
   },
   {
     id: 'pan',
     name: 'Pan',
     icon: 'pan-tool',
-    position: { x: 361, y: 835 - 59 - 16 },
+    position: { x: 'right-80', y: 'bottom-160' },
     action: 'pan'
   }
 ];

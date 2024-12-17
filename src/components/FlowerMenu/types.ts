@@ -1,5 +1,7 @@
 import type { Mutable, Rect2, Vector2 } from '@types';
 
+export type Vector2WithLayout = { x: string | number; y: string | number };
+
 export type NodeState = {
   id: string;
   name: string;
@@ -22,6 +24,6 @@ export type Node = {
   action?: string;
   openOnFocus?: boolean;
   children?: Node[];
-  position?: Vector2;
+  position?: Vector2WithLayout;
   isOpen?: boolean;
 };
