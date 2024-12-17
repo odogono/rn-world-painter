@@ -1,9 +1,9 @@
 import { shallow } from 'zustand/shallow';
 
-import { useStoreState } from './useStore';
+import { useStoreSelector } from './useStore';
 
 export const useStoreActions = () => {
-  const result = useStoreState(
+  const result = useStoreSelector(
     (state) => ({
       setViewPosition: state.setViewPosition,
       moveToPosition: state.moveToPosition,

@@ -11,7 +11,12 @@ import {
 } from 'react-native-reanimated';
 
 import { createLogger } from '@helpers/log';
-import { useStore, useStoreState, useStoreViewLayout } from '@model/useStore';
+import {
+  useStore,
+  useStoreSelector,
+  useStoreState,
+  useStoreViewLayout
+} from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature } from '@types';
 import { bboxToLayoutRectangle } from '../../helpers/geo';
@@ -23,18 +28,11 @@ export const MiniMap = () => {
 
   const viewLayout = useStoreViewLayout();
 
-  const visibleTileIdsRef = useRef<string>('');
-  const [visibleFeatures, setVisibleFeatures] = useState<BrushFeature[]>([]);
-  const { getVisibleFeatures } = useStoreActions();
-
-  const [mViewMatrix, mViewPosition, mViewScale, mViewBBox, features] =
-    useStoreState((state) => [
-      state.mViewMatrix,
-      state.mViewPosition,
-      state.mViewScale,
-      state.mViewBBox,
-      state.features
-    ]);
+  // const visibleTileIdsRef = useRef<string>('');
+  // const [visibleFeatures, setVisibleFeatures] = useState<BrushFeature[]>([]);
+  // const { getVisibleFeatures } = useStoreActions();
+  const features = useStoreState().use.features();
+  const mViewBBox = useStoreState().use.mViewBBox();
 
   useEffect(() => {
     runOnUI(updateViewportPath)();

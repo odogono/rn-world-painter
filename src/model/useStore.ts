@@ -16,7 +16,7 @@ export const useStore = () => {
   return context;
 };
 
-export const useStoreState = <T>(
+export const useStoreSelector = <T>(
   selector: (state: StoreState) => T,
   equalityFn?: (left: T, right: T) => boolean
 ): T => {
@@ -27,8 +27,16 @@ export const useStoreState = <T>(
   return useStoreWithEqualityFn(context.store, selector, equalityFn);
 };
 
+export const useStoreState = () => {
+  const context = useContext(StoreContext);
+  if (!context) {
+    throw new Error('useStore must be used within a StoreProvider');
+  }
+  return context.store;
+};
+
 export const useStoreViewDims = () => {
-  return useStoreState((state) => ({
+  return useStoreSelector((state) => ({
     width: state.viewWidth,
     height: state.viewHeight,
     viewLayout: state.viewLayout,
@@ -37,9 +45,11 @@ export const useStoreViewDims = () => {
 };
 
 export const useStoreViewLayout = (): LayoutRectangle => {
-  return useStoreState((state) => state.viewLayout);
+  return useStoreState().use.viewLayout();
+  // return useStoreSelector((state) => state.viewLayout);
 };
 
 export const useStoreSetViewLayout = () => {
-  return useStoreState((state) => state.setViewScreenDims);
+  return useStoreState().use.setViewScreenDims();
+  // return useStoreSelector((state) => state.setViewScreenDims);
 };

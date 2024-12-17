@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Group, Path, SkPath, Skia } from '@shopify/react-native-skia';
+import { Group, Path, Rect, SkPath, Skia } from '@shopify/react-native-skia';
 import { Polygon } from 'geojson';
 import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 
 import { createLogger } from '@helpers/log';
-import { useStore, useStoreState } from '@model/useStore';
+import { useStore, useStoreSelector, useStoreState } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature } from '@types';
-import { setDebugMsg3, setDebugMsg4 } from '../Debug/Debug';
+import { setDebugMsg3, setDebugMsg4, setDebugMsg5 } from '../Debug/Debug';
 
 const log = createLogger('ShapeRenderer');
 
@@ -16,15 +16,9 @@ export const ShapeRenderer = () => {
   const visibleTileIdsRef = useRef<string>('');
   const [visibleFeatures, setVisibleFeatures] = useState<BrushFeature[]>([]);
   const { getVisibleFeatures } = useStoreActions();
-
-  const [mViewMatrix, mViewPosition, mViewScale, mViewBBox, features] =
-    useStoreState((state) => [
-      state.mViewMatrix,
-      state.mViewPosition,
-      state.mViewScale,
-      state.mViewBBox,
-      state.features
-    ]);
+  const selectedFeatures = useStoreState().use.selectedFeatures();
+  const features = useStoreState().use.features();
+  const mViewBBox = useStoreState().use.mViewBBox();
 
   useEffect(() => {
     setTimeout(() => {
@@ -32,22 +26,39 @@ export const ShapeRenderer = () => {
     }, 1);
   }, [features]);
 
-  const updateVisibleFeatures = useCallback((bbox: BBox) => {
-    const visibleFeatures = getVisibleFeatures(bbox);
+  useEffect(() => {
+    log.debug('[ShapeRenderer] selectedFeatures', selectedFeatures);
+  }, [selectedFeatures]);
 
-    const visibleIds = visibleFeatures
-      .map((feature) => feature.id + (feature.properties.isSelected ? 'S' : ''))
-      .filter(Boolean)
-      .join('|');
+  const updateVisibleFeatures = useCallback(
+    (bbox: BBox) => {
+      const visibleFeatures = getVisibleFeatures(bbox).map((feature) => {
+        const isSelected = selectedFeatures.includes(feature.id as string);
+        return {
+          ...feature,
+          properties: { ...feature.properties, isSelected }
+        };
+      });
 
-    log.debug('[updateVisibleFeatures] visibleIds', visibleIds);
+      const visibleIds = visibleFeatures
+        .map((feature) => {
+          const isSelected = feature.properties.isSelected;
+          return feature.id + (isSelected ? 'S' : '');
+        })
+        .filter(Boolean)
+        .join('|');
 
-    if (visibleIds !== visibleTileIdsRef.current) {
-      visibleTileIdsRef.current = visibleIds;
-      setVisibleFeatures(visibleFeatures);
-      setDebugMsg4(`visibleFeatures: ${visibleFeatures.length}`);
-    }
-  }, []);
+      log.debug('[updateVisibleFeatures] visibleIds', visibleIds);
+
+      if (visibleIds !== visibleTileIdsRef.current) {
+        visibleTileIdsRef.current = visibleIds;
+        setVisibleFeatures(visibleFeatures);
+        setDebugMsg4(`visibleFeatures: ${visibleFeatures.length}`);
+        setDebugMsg5(`selectedFeatures: ${selectedFeatures.length}`);
+      }
+    },
+    [selectedFeatures]
+  );
 
   useAnimatedReaction(
     () => [mViewBBox.value] as [BBox],
@@ -73,10 +84,20 @@ const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
   }, [shape]);
 
   const isSelected = shape.properties.isSelected;
+  const bbox = useMemo(() => {
+    return isSelected ? path.computeTightBounds() : null;
+  }, [isSelected, path]);
 
-  const color = isSelected ? '#00F' : (shape.properties.color ?? '#444');
+  const color = shape.properties.color ?? '#444';
 
-  return <Path path={path} color={color} style='stroke' strokeWidth={2} />;
+  return (
+    <>
+      <Path path={path} color={color} style='stroke' strokeWidth={2} />
+      {bbox && (
+        <Rect rect={bbox} style='stroke' strokeWidth={0.5} color='blue' />
+      )}
+    </>
+  );
 };
 
 const applyBrushFeatureToPath = (shape: BrushFeature, path: SkPath) => {

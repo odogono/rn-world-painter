@@ -31,7 +31,7 @@ export type FlowerMenuProps = {
  */
 export const FlowerMenu = ({ viewLayout, ...nodeProps }: FlowerMenuProps) => {
   const nodeIds = useMenuStore().use.getVisibleNodeIds()();
-  const selectedNodeIds = useFlowerMenuStore((s) => s.nodes);
+  // const selectedNodeIds = useFlowerMenuStore((s) => s.nodes);
   const applyNodeProps = useFlowerMenuStore((s) => s.applyNodeProps);
   const setViewLayout = useFlowerMenuStore((s) => s.setViewLayout);
 
@@ -39,7 +39,7 @@ export const FlowerMenu = ({ viewLayout, ...nodeProps }: FlowerMenuProps) => {
 
   useEffect(() => {
     applyNodeProps(nodeProps);
-    // log.debug('applyNodeProps', nodeProps);
+    log.debug('applyNodeProps', nodeProps);
   }, [nodePropStr]);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export const FlowerMenu = ({ viewLayout, ...nodeProps }: FlowerMenuProps) => {
   //   // });
   // }, [nodeIds, selectedNodeIds]);
 
-  log.debug('FlowerMenuContainer rendered', nodeIds);
+  // log.debug('FlowerMenuContainer rendered', nodeIds);
   return (
     <View style={styles.container}>
       {nodeIds.map((id) => (

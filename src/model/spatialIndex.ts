@@ -1,6 +1,7 @@
 import RBush from 'rbush';
 
 import { booleanDisjoint } from '@turf/boolean-disjoint';
+import { booleanPointInPolygon } from '@turf/boolean-point-in-polygon';
 import { BBox, BrushFeature, Rect2, Vector2 } from '@types';
 
 // https://www.npmjs.com/package/@turf/geojson-rbush?activeTab=code
@@ -48,30 +49,25 @@ export class FeatureRBush extends RBush<BrushFeature> {
 
   findByIntersecting(feature: BrushFeature) {
     const bboxIntersections = this.findByBBox(feature.bbox!);
-
-    // const intersectingFeatures = bboxIntersections.filter(
-    //   (intersectingFeature) => {
-    //     return booleanDisjoint(feature, intersectingFeature);
-    //   }
-    // );
-
-    // console.log(
-    //   '[findByIntersecting] intersectingFeatures',
-    //   intersectingFeatures.length,
-    //   'bboxIntersections',
-    //   bboxIntersections.length
-    // );
-
     return bboxIntersections;
   }
 
-  findByPosition(position: Vector2) {
-    return this.search({
-      minX: position.x,
-      minY: position.y,
-      maxX: position.x,
-      maxY: position.y
+  findByPosition(position: Vector2, checkPointInPolygon: boolean = false) {
+    const { x, y } = position;
+    const intersections = this.search({
+      minX: x,
+      minY: y,
+      maxX: x,
+      maxY: y
     });
+
+    if (checkPointInPolygon) {
+      return intersections.filter((feature) => {
+        return booleanPointInPolygon([x, y], feature.geometry);
+      });
+    }
+
+    return intersections;
   }
 }
 

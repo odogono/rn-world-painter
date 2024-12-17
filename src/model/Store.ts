@@ -1,5 +1,6 @@
 import { createStore as createZustandStore } from 'zustand';
 
+import { WithSelectors, createSelectors } from '@helpers/zustand';
 import {
   FeatureSlice,
   FeatureSliceProps,
@@ -11,14 +12,16 @@ export type StoreState = ViewSlice & FeatureSlice;
 
 export type StoreProps = ViewSliceProps & FeatureSliceProps;
 
-export type Store = ReturnType<typeof createStore>;
+export type Store = WithSelectors<ReturnType<typeof createStore>>;
 
 export const createStore = (initialState: Partial<StoreProps>) => {
-  return createZustandStore<StoreState>()((...args) => ({
-    ...createViewSlice(...args),
-    ...createFeatureSlice(...args),
-    ...initialState
-  }));
+  return createSelectors(
+    createZustandStore<StoreState>()((...args) => ({
+      ...createViewSlice(...args),
+      ...createFeatureSlice(...args),
+      ...initialState
+    }))
+  );
 };
 
 export const store = createStore({});

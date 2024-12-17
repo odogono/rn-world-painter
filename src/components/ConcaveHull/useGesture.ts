@@ -27,25 +27,22 @@ export const useGesture = ({
   onEnd,
   onTap
 }: UseGestureProps) => {
-  const {
-    mViewPosition,
-    mViewScale,
-    mViewBBox,
-    screenToWorld,
-    zoomOnPoint,
-    viewLayout
-  } = useStore();
+  const { mViewPosition, mViewScale, screenToWorld, zoomOnPoint } = useStore();
 
   const startScale = useSharedValue(1);
   const startPosition = useSharedValue({ x: 0, y: 0 });
 
-  const singleTap = Gesture.Tap()
-    .maxDuration(250)
-    .onStart(({ x, y }) => {
-      const worldPos = screenToWorld({ x, y });
+  const singleTap = useMemo(
+    () =>
+      Gesture.Tap()
+        .maxDuration(250)
+        .onStart(({ x, y }) => {
+          const worldPos = screenToWorld({ x, y });
 
-      runOnJS(onTap)(worldPos);
-    });
+          runOnJS(onTap)(worldPos);
+        }),
+    [onTap, screenToWorld]
+  );
 
   const pan = useMemo(
     () =>
@@ -137,11 +134,11 @@ export const useGesture = ({
     []
   );
 
-  if (isWorldMoveEnabled) {
-    return Gesture.Simultaneous(singleTap, pan, pinchGesture);
-  } else {
-    return Gesture.Exclusive(singleTap, pan);
-  }
-
-  // return gesture;
+  return useMemo(() => {
+    if (isWorldMoveEnabled) {
+      return Gesture.Simultaneous(singleTap, pan, pinchGesture);
+    } else {
+      return Gesture.Exclusive(singleTap, pan);
+    }
+  }, [singleTap, pan, pinchGesture, isWorldMoveEnabled]);
 };

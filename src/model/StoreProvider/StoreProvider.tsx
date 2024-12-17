@@ -47,9 +47,7 @@ export const StoreProvider = ({
     mViewBBox
   } = storeRef.current.getState();
 
-  // const viewWidth = useStore(storeRef.current, (state) => state.viewWidth);
-  // const viewHeight = useStore(storeRef.current, (state) => state.viewHeight);
-  const viewLayout = useStore(storeRef.current, (state) => state.viewLayout);
+  const viewLayout = storeRef.current.use.viewLayout();
 
   useAnimatedReaction(
     () => [mViewPosition.value, mViewScale.value] as [Vector2, number],

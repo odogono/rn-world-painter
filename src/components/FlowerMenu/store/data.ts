@@ -17,6 +17,11 @@ export const menuData: Node[] = [
         id: 'brushRemove',
         name: 'Remove',
         icon: 'remove-circle-outline'
+      },
+      {
+        id: 'brushDelete',
+        name: 'Delete',
+        icon: 'delete-outline'
       }
     ]
   },

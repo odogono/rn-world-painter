@@ -29,6 +29,7 @@ import { createLogger } from '@helpers/log';
 import { ApplyOperation } from '@model/slices/featureSlice';
 import {
   useStore,
+  useStoreSelector,
   useStoreSetViewLayout,
   useStoreState,
   useStoreViewLayout
@@ -37,9 +38,7 @@ import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 import { MiniMap } from './MiniMap';
-import { ModeButton } from './ModeButton';
 import { ShapeRenderer } from './ShapeRenderer';
-import { ZoomControls } from './ZoomControls';
 import { useGesture } from './useGesture';
 import { usePointBrush } from './usePointBrush';
 
@@ -57,6 +56,15 @@ export const Painter = () => {
   const viewLayout = useStoreViewLayout();
   const { zoomOnPoint } = useStore();
   const { addFeature, resetFeatures, handleTap } = useStoreActions();
+  const removeSelectedFeatures = useStoreState().use.removeSelectedFeatures();
+  const [mViewMatrix, mViewPosition, mViewScale, mViewBBox] = useStoreSelector(
+    (state) => [
+      state.mViewMatrix,
+      state.mViewPosition,
+      state.mViewScale,
+      state.mViewBBox
+    ]
+  );
 
   const pan = useGesture({
     isWorldMoveEnabled,
@@ -64,10 +72,6 @@ export const Painter = () => {
     onUpdate: addPoint,
     onEnd: endBrush
   });
-
-  // const onFlowerMenuEvent = useCallback((type: string, event: any) => {
-  //   log.debug('[FlowerMenu][event]', type, event);
-  // }, []);
 
   const onNodeSelect = useCallback(({ id }: { id: string }) => {
     log.debug('[Painter][onNodeSelect]', id);
@@ -93,6 +97,9 @@ export const Painter = () => {
       case 'brushRemove':
         setBrushMode(ApplyOperation.SUBTRACT);
         break;
+      case 'brushDelete':
+        removeSelectedFeatures();
+        break;
     }
   }, []);
 
@@ -104,15 +111,6 @@ export const Painter = () => {
       resetFeatures();
     };
   }, []);
-
-  const [mViewMatrix, mViewPosition, mViewScale, mViewBBox] = useStoreState(
-    (state) => [
-      state.mViewMatrix,
-      state.mViewPosition,
-      state.mViewScale,
-      state.mViewBBox
-    ]
-  );
 
   useAnimatedReaction(
     () =>
@@ -127,6 +125,21 @@ export const Painter = () => {
       setDebugMsg3(formatBBox(bbox));
     }
   );
+
+  // useRenderingTrace('Painter', {
+  //   isWorldMoveEnabled,
+  //   brushMode,
+  //   viewLayout,
+  //   addFeature,
+  //   resetFeatures,
+  //   handleTap,
+  //   zoomOnPoint,
+  //   setViewLayout,
+  //   addPoint,
+  //   brushPath,
+  //   endBrush,
+  //   pan
+  // });
 
   return (
     <View style={styles.container}>

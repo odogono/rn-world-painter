@@ -47,7 +47,7 @@ export type FeatureSliceActions = {
   removeFeature: (feature: BrushFeature) => void;
   resetFeatures: () => void;
   getVisibleFeatures: (bbox: BBox) => BrushFeature[];
-
+  removeSelectedFeatures: () => void;
   handleTap: (point: Vector2) => void;
 };
 
@@ -119,6 +119,22 @@ export const createFeatureSlice: StateCreator<
     });
   },
 
+  removeSelectedFeatures: () => {
+    set((state) => {
+      const selectedFeatures = state.selectedFeatures;
+
+      const featuresToRemove = state.features.filter((f) =>
+        selectedFeatures.find((id) => id === f.id)
+      );
+      const featuresRemaining = state.features.filter(
+        (f) => !selectedFeatures.find((id) => id === f.id)
+      );
+
+      featuresToRemove.forEach((f) => state.spatialIndex.remove(f));
+      return { ...state, features: featuresRemaining, selectedFeatures: [] };
+    });
+  },
+
   removeFeature: (feature: BrushFeature) => {
     set((state) => {
       state.spatialIndex.remove(feature);
@@ -144,40 +160,29 @@ export const createFeatureSlice: StateCreator<
 
   handleTap: (point: Vector2) =>
     set((state) => {
-      log.debug('[handleTap]', point);
-
+      const selectedFeatures: string[] = [];
+      // bounding box search with point in position
       const featureIds = get()
-        .spatialIndex.findByPosition(point)
+        .spatialIndex.findByPosition(point, true)
         .map((f) => f.id!) as string[];
-      log.debug('[handleTap] featureIds', featureIds);
 
-      // state.selectedFeatures = features;
-      let selectedFeatures = [...state.selectedFeatures];
+      // if (featureIds.length === 0) {
+      //   return { ...state, selectedFeatures: [] };
+      // }
+
+      // let selectedFeatures = [...state.selectedFeatures];
 
       featureIds.forEach((featureId) => {
-        if (selectedFeatures.includes(featureId)) {
-          selectedFeatures = selectedFeatures.filter((f) => f !== featureId);
-        } else {
-          selectedFeatures.push(featureId);
-        }
+        // if (selectedFeatures.includes(featureId)) {
+        //   selectedFeatures = selectedFeatures.filter((f) => f !== featureId);
+        // } else {
+        selectedFeatures.push(featureId);
+        // }
       });
 
+      log.debug('[handleTap] selectedFeatures', selectedFeatures);
+
       return { ...state, selectedFeatures };
-
-      // const updatedFeatures = state.features.map((feature) => {
-      //   const isTapped = features.includes(feature.id);
-      //   let isSelected = feature.properties.isSelected;
-      //   if (isTapped) {
-      //     isSelected = !isSelected;
-      //   }
-
-      //   return {
-      //     ...feature,
-      //     properties: { ...feature.properties, isSelected }
-      //   };
-      // });
-
-      // return { ...state, features: updatedFeatures };
     })
 });
 
