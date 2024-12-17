@@ -26,7 +26,7 @@ import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
 import { useEvents } from '@contexts/Events';
 import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
-import { ApplyOperation } from '@model/slices/featureSlice';
+import { ActionType, ApplyOperation } from '@model/types';
 import {
   useStore,
   useStoreSelector,
@@ -55,8 +55,12 @@ export const Painter = () => {
   const setViewLayout = useStoreSetViewLayout();
   const viewLayout = useStoreViewLayout();
   const { zoomOnPoint } = useStore();
-  const { addFeature, resetFeatures, handleTap } = useStoreActions();
+  const { resetFeatures, handleTap } = useStoreActions();
+  const applyAction = useStoreState().use.applyAction();
   const removeSelectedFeatures = useStoreState().use.removeSelectedFeatures();
+  const undo = useStoreState().use.undo();
+  const redo = useStoreState().use.redo();
+
   const [mViewMatrix, mViewPosition, mViewScale, mViewBBox] = useStoreSelector(
     (state) => [
       state.mViewMatrix,
@@ -100,12 +104,26 @@ export const Painter = () => {
       case 'brushDelete':
         removeSelectedFeatures();
         break;
+      case 'undo':
+        undo();
+        break;
+      case 'redo':
+        redo();
+        break;
     }
   }, []);
 
   useEffect(() => {
-    addFeature(testFeature as BrushFeature);
-    addFeature(testFeature2 as BrushFeature);
+    applyAction({
+      type: ActionType.ADD_BRUSH,
+      feature: testFeature as BrushFeature,
+      apply: ApplyOperation.ADD
+    });
+    applyAction({
+      type: ActionType.ADD_BRUSH,
+      feature: testFeature2 as BrushFeature,
+      apply: ApplyOperation.ADD
+    });
 
     return () => {
       resetFeatures();

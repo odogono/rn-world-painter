@@ -32,6 +32,7 @@
     }
   ],
   "rules": {
+    "@typescript-eslint/no-redeclare": "off",
     "@eslint-react/hooks-extra/no-direct-set-state-in-use-effect": "error",
     "@typescript-eslint/member-ordering": "warn",
     "prettier/prettier": 1,

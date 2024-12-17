@@ -7,7 +7,6 @@ export const useStoreActions = () => {
     (state) => ({
       setViewPosition: state.setViewPosition,
       moveToPosition: state.moveToPosition,
-      addFeature: state.addFeature,
       resetFeatures: state.resetFeatures,
       getVisibleFeatures: state.getVisibleFeatures,
       handleTap: state.handleTap

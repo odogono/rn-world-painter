@@ -9,9 +9,8 @@ import { featureGeometryToLocal } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { simplify } from '@helpers/simplify';
 import { createBrushFeature } from '@model/brushFeature';
-import { ApplyOperation } from '@model/slices/featureSlice';
-import { useStore } from '@model/useStore';
-import { useStoreActions } from '@model/useStoreActions';
+import { ActionType, ApplyOperation } from '@model/types';
+import { useStore, useStoreState } from '@model/useStore';
 import { BrushFeature, Position } from '@types';
 
 const log = createLogger('usePointBrush');
@@ -29,9 +28,10 @@ export const usePointBrush = ({
   const brushModeRef = useRef(brushMode);
 
   const rlog = useRemoteLogContext();
-  const { screenToWorld, mViewBBox, screenToWorldPoints } = useStore();
+  const { screenToWorldPoints } = useStore();
 
-  const { addFeature } = useStoreActions();
+  // const { addFeature } = useStoreActions();
+  const applyAction = useStoreState().use.applyAction();
 
   const brushSize = useSharedValue(30);
   const brushResolution = useSharedValue(16);
@@ -65,12 +65,18 @@ export const usePointBrush = ({
     //   applyOperation: brushMode
     // });
 
-    addFeature(feature, {
-      updateBBox: true,
-      // note - for some reason, the brushMode prop does not update here
-      applyOperation: brushModeRef.current
+    applyAction({
+      type: ActionType.ADD_BRUSH,
+      feature,
+      apply: brushModeRef.current,
+      options: { updateBBox: true }
     });
-    // })(feature);
+
+    // addFeature(feature, {
+    //   updateBBox: true,
+    //   // note - for some reason, the brushMode prop does not update here
+    //   applyOperation: brushModeRef.current
+    // });
 
     return outcome;
   }, []);

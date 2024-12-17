@@ -15,40 +15,41 @@ import {
 } from '@helpers/polyclip';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
+import {
+  Action,
+  ActionType,
+  AddFeatureOptions,
+  ApplyOperation
+} from '../types';
+import { addFeature } from './featureHelpers';
 
 export type FeatureSliceProps = {
   features: BrushFeature[];
   spatialIndex: FeatureRBush;
   selectedFeatures: string[];
+  undoStack: Action[];
+  redoStack: Action[];
 };
 
 const defaultState: FeatureSliceProps = {
   features: [],
   spatialIndex: createSpatialIndex(),
-  selectedFeatures: []
-};
-
-export const ApplyOperation = {
-  ADD: 'add',
-  SUBTRACT: 'subtract',
-  INTERSECT: 'intersect'
-} as const;
-
-export type ApplyOperation =
-  (typeof ApplyOperation)[keyof typeof ApplyOperation];
-
-export type AddFeatureOptions = {
-  updateBBox?: boolean;
-  applyOperation?: ApplyOperation;
+  selectedFeatures: [],
+  undoStack: [],
+  redoStack: []
 };
 
 export type FeatureSliceActions = {
-  addFeature: (feature: BrushFeature, options?: AddFeatureOptions) => void;
+  applyAction: (action: Action) => void;
+  // addFeature: (feature: BrushFeature, options?: AddFeatureOptions) => void;
   removeFeature: (feature: BrushFeature) => void;
   resetFeatures: () => void;
   getVisibleFeatures: (bbox: BBox) => BrushFeature[];
   removeSelectedFeatures: () => void;
   handleTap: (point: Vector2) => void;
+
+  undo: () => void;
+  redo: () => void;
 };
 
 export type FeatureSlice = FeatureSliceProps & FeatureSliceActions;
@@ -63,61 +64,61 @@ export const createFeatureSlice: StateCreator<
 > = (set, get) => ({
   ...defaultState,
 
-  addFeature: (feature: BrushFeature, options: AddFeatureOptions = {}) => {
-    set((state) => {
-      const features = [...state.features];
+  // addFeature: (feature: BrushFeature, options: AddFeatureOptions = {}) => {
+  //   set((state) => {
+  //     const features = [...state.features];
 
-      if (options.updateBBox) {
-        feature.bbox = calculateBBox(feature.geometry);
-      }
+  //     if (options.updateBBox) {
+  //       feature.bbox = calculateBBox(feature.geometry);
+  //     }
 
-      if (options.applyOperation === ApplyOperation.ADD) {
-        const [addedCount, removedCount, updatedFeatures] = applyAddition(
-          feature,
-          state.spatialIndex,
-          features
-        );
+  //     if (options.applyOperation === ApplyOperation.ADD) {
+  //       const [addedCount, removedCount, updatedFeatures] = applyAddition(
+  //         feature,
+  //         state.spatialIndex,
+  //         features
+  //       );
 
-        log.debug('[addFeature] applyAddition added', addedCount);
-        log.debug('[addFeature] applyAddition removed', removedCount);
+  //       log.debug('[addFeature] applyAddition added', addedCount);
+  //       log.debug('[addFeature] applyAddition removed', removedCount);
 
-        if (addedCount > 0 || removedCount > 0) {
-          return { ...state, features: updatedFeatures };
-        }
+  //       if (addedCount > 0 || removedCount > 0) {
+  //         return { ...state, features: updatedFeatures };
+  //       }
 
-        state.spatialIndex.insert(feature);
-        features.push(feature);
+  //       state.spatialIndex.insert(feature);
+  //       features.push(feature);
 
-        return { ...state, features };
-      } else if (options.applyOperation === ApplyOperation.SUBTRACT) {
-        const timeMs = performance.now();
+  //       return { ...state, features };
+  //     } else if (options.applyOperation === ApplyOperation.SUBTRACT) {
+  //       const timeMs = performance.now();
 
-        const [addedCount, removedCount, updatedFeatures] = applySubtraction(
-          feature,
-          state.spatialIndex,
-          features
-        );
+  //       const [addedCount, removedCount, updatedFeatures] = applySubtraction(
+  //         feature,
+  //         state.spatialIndex,
+  //         features
+  //       );
 
-        log.debug(
-          '[addFeature] applySubtraction added',
-          addedCount,
-          'removed',
-          removedCount,
-          'new features',
-          performance.now() - timeMs
-        );
+  //       log.debug(
+  //         '[addFeature] applySubtraction added',
+  //         addedCount,
+  //         'removed',
+  //         removedCount,
+  //         'new features',
+  //         performance.now() - timeMs
+  //       );
 
-        if (addedCount > 0 || removedCount > 0) {
-          return { ...state, features: updatedFeatures };
-        }
-      }
+  //       if (addedCount > 0 || removedCount > 0) {
+  //         return { ...state, features: updatedFeatures };
+  //       }
+  //     }
 
-      state.spatialIndex.insert(feature);
-      features.push(feature);
+  //     state.spatialIndex.insert(feature);
+  //     features.push(feature);
 
-      return { ...state, features };
-    });
-  },
+  //     return { ...state, features };
+  //   });
+  // },
 
   removeSelectedFeatures: () => {
     set((state) => {
@@ -183,86 +184,100 @@ export const createFeatureSlice: StateCreator<
       log.debug('[handleTap] selectedFeatures', selectedFeatures);
 
       return { ...state, selectedFeatures };
+    }),
+
+  applyAction: (action: Action) =>
+    set((state) => {
+      state = applyAction(state, action);
+
+      // add the action to the undo stack
+      state = {
+        ...state,
+        undoStack: [...state.undoStack, action],
+        redoStack: []
+      };
+
+      return state;
+    }),
+
+  // replayActions: () =>
+  //   set((state) => {
+  //     // clear everything
+  //     const newState = { ...state, features: [], selectedFeatures: [] };
+  //     newState.spatialIndex.clear();
+
+  //     state.undoStack.reduce<FeatureSlice>((state, action) => {
+  //       return applyAction(state, action);
+  //     }, newState);
+
+  //     return newState;
+  //   }),
+
+  undo: () =>
+    set((state) => {
+      // pop the last action from the undo stack
+      const action = state.undoStack.pop();
+
+      if (!action) {
+        return state;
+      }
+
+      // add the action to the redo stack
+      state = { ...state, redoStack: [...state.redoStack, action] };
+
+      state = replayActions(state);
+
+      log.debug(
+        '[undo] undo stack',
+        state.undoStack.length,
+        'redo stack',
+        state.redoStack.length
+      );
+
+      return state;
+    }),
+  redo: () =>
+    set((state) => {
+      // pop the last action from the redo stack
+      const action = state.redoStack.pop();
+
+      if (!action) {
+        return state;
+      }
+
+      // add the action to the undo stack
+      state = { ...state, undoStack: [...state.undoStack, action] };
+
+      state = applyAction(state, action);
+
+      log.debug(
+        '[redo] undo stack',
+        state.undoStack.length,
+        'redo stack',
+        state.redoStack.length
+      );
+
+      return state;
     })
 });
 
-const applyAddition = (
-  brush: BrushFeature,
-  spatialIndex: FeatureRBush,
-  features: BrushFeature[]
-): [number, number, BrushFeature[]] => {
-  const intersectingFeatures = spatialIndex.findByIntersecting(brush);
+const replayActions = (state: FeatureSlice) => {
+  // clear everything
+  const newState = { ...state, features: [], selectedFeatures: [] };
+  newState.spatialIndex.clear();
 
-  const removeFeatures: BrushFeature[] = [];
-  const newFeatures: BrushFeature[] = [];
-
-  intersectingFeatures.forEach((feature) => {
-    const [result, features] = applyFeatureUnion(feature, brush);
-    log.debug('🔥 [applyAddition] applyFeatureUnion', result);
-    // if (result !== POLYCLIP_RESULT_UNCHANGED) {
-    removeFeatures.push(feature);
-    // }
-    newFeatures.push(...features);
-  });
-
-  // remote the existing features
-  removeFeatures.forEach((feature) => {
-    spatialIndex.remove(feature);
-    features = features.filter((f) => f.id !== feature.id);
-  });
-
-  // add the new features
-  newFeatures.forEach((feature) => {
-    spatialIndex.insert(feature);
-    features.push(feature);
-  });
-
-  return [newFeatures.length, removeFeatures.length, features];
+  return state.undoStack.reduce<FeatureSlice>((state, action) => {
+    return applyAction(state, action);
+  }, newState);
 };
 
-const applySubtraction = (
-  brush: BrushFeature,
-  spatialIndex: FeatureRBush,
-  features: BrushFeature[]
-): [number, number, BrushFeature[]] => {
-  const intersectingFeatures = spatialIndex.findByIntersecting(brush);
-
-  if (!intersectingFeatures.length) {
-    return [0, 0, features];
+const applyAction = (state: FeatureSlice, action: Action) => {
+  switch (action.type) {
+    case ActionType.ADD_BRUSH:
+      return addFeature(state, action.feature!, action.options);
+    default:
+      return state;
   }
-
-  const removeFeatures: BrushFeature[] = [];
-  const newFeatures: BrushFeature[] = [];
-
-  intersectingFeatures.forEach((feature) => {
-    const [result, features] = applyFeatureDifference(feature, brush);
-    log.debug('[applySubtraction] applyFeatureDifference', result);
-    if (result !== POLYCLIP_RESULT_UNCHANGED) {
-      removeFeatures.push(feature);
-    }
-    newFeatures.push(...features);
-  });
-
-  log.debug('[applySubtraction] removeFeatures', removeFeatures.length);
-  log.debug('[applySubtraction] newFeatures', newFeatures.length);
-
-  if (newFeatures.length === 0 && removeFeatures.length === 0) {
-    return [0, 0, features];
-  }
-
-  // remote the existing features
-  removeFeatures.forEach((feature) => {
-    spatialIndex.remove(feature);
-    features = features.filter((f) => f.id !== feature.id);
-  });
-
-  // add the new features
-  newFeatures.forEach((feature) => {
-    spatialIndex.insert(feature);
-    features.push(feature);
-  });
-
-  return [newFeatures.length, removeFeatures.length, features];
 };
 
 // const applySubtractionToFeatures = (
