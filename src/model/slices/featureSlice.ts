@@ -15,9 +15,10 @@ import {
   AddBrushAction,
   AddFeatureOptions,
   BrushMode,
+  MoveBrushAction,
   RemoveBrushAction
 } from '../types';
-import { addFeature, removeFeatures } from './featureHelpers';
+import { addFeature, moveFeature, removeFeatures } from './featureHelpers';
 
 export type FeatureSliceProps = {
   features: BrushFeature[];
@@ -25,6 +26,7 @@ export type FeatureSliceProps = {
   selectedFeatures: string[];
   undoStack: Action[];
   redoStack: Action[];
+  brushMode: BrushMode;
 };
 
 const defaultState: FeatureSliceProps = {
@@ -32,10 +34,14 @@ const defaultState: FeatureSliceProps = {
   spatialIndex: createSpatialIndex(),
   selectedFeatures: [],
   undoStack: [],
-  redoStack: []
+  redoStack: [],
+  brushMode: BrushMode.ADD
 };
 
 export type FeatureSliceActions = {
+  setBrushMode: (brushMode: BrushMode) => void;
+  getBrushMode: () => BrushMode;
+
   applyAction: (action: Action) => void;
   // addFeature: (feature: BrushFeature, options?: AddFeatureOptions) => void;
   removeFeature: (feature: BrushFeature) => void;
@@ -46,6 +52,12 @@ export type FeatureSliceActions = {
   getSelectedFeature: () => BrushFeature | undefined;
   getFeatureIdsByPosition: (point: Vector2) => string[];
   clearSelectedFeatures: () => void;
+
+  // adds without undo/redo
+  addFeatureImmediate: (feature: BrushFeature, brushMode: BrushMode) => void;
+
+  // removes without undo/redo
+  removeFeatureImmediate: (feature: BrushFeature) => void;
 
   undo: () => void;
   redo: () => void;
@@ -62,6 +74,11 @@ export const createFeatureSlice: StateCreator<
   FeatureSlice
 > = (set, get) => ({
   ...defaultState,
+
+  setBrushMode: (brushMode: BrushMode) =>
+    set((state) => ({ ...state, brushMode })),
+
+  getBrushMode: () => get().brushMode,
 
   applyAction: (action: Action) => set((state) => applyAction(state, action)),
 
@@ -94,6 +111,28 @@ export const createFeatureSlice: StateCreator<
   removeFeature: (feature: BrushFeature) =>
     set((state) =>
       applyAction(state, {
+        type: ActionType.REMOVE_BRUSH,
+        featureIds: [feature.id! as string]
+      })
+    ),
+
+  // adds without undo/redo
+  addFeatureImmediate: (
+    feature: BrushFeature,
+    brushMode: BrushMode = BrushMode.ADD
+  ) =>
+    set((state) =>
+      applyActionInternal(state, {
+        type: ActionType.ADD_BRUSH,
+        feature,
+        brushMode
+      })
+    ),
+
+  // removes without undo/redo
+  removeFeatureImmediate: (feature: BrushFeature) =>
+    set((state) =>
+      applyActionInternal(state, {
         type: ActionType.REMOVE_BRUSH,
         featureIds: [feature.id! as string]
       })
@@ -221,6 +260,14 @@ const applyActionInternal = (state: FeatureSlice, action: Action) => {
         feature: action.feature,
         options: action.options ?? {}
       });
+    case ActionType.MOVE_BRUSH:
+      return moveFeature({
+        state,
+        brushMode: action.brushMode,
+        feature: action.feature,
+        translation: action.translation,
+        options: action.options ?? {}
+      });
     case ActionType.REMOVE_BRUSH:
       return removeFeatures(state, action.featureIds);
     default:
@@ -244,12 +291,16 @@ const printHistory = (state: FeatureSlice) => {
 };
 
 const actionToString = (action: Action) => {
-  if (action.type === ActionType.ADD_BRUSH) {
-    return addBrushActionToString(action as AddBrushAction);
-  } else if (action.type === ActionType.REMOVE_BRUSH) {
-    return removeBrushActionToString(action as RemoveBrushAction);
+  switch (action.type) {
+    case ActionType.ADD_BRUSH:
+      return addBrushActionToString(action as AddBrushAction);
+    case ActionType.REMOVE_BRUSH:
+      return removeBrushActionToString(action as RemoveBrushAction);
+    case ActionType.MOVE_BRUSH:
+      return moveBrushActionToString(action as MoveBrushAction);
+    default:
+      return JSON.stringify(action);
   }
-  return '';
 };
 
 const addBrushActionToString = (action: AddBrushAction) => {
@@ -258,6 +309,10 @@ const addBrushActionToString = (action: AddBrushAction) => {
 
 const removeBrushActionToString = (action: RemoveBrushAction) => {
   return `${action.type} ${action.featureIds.join(', ')}`;
+};
+
+const moveBrushActionToString = (action: MoveBrushAction) => {
+  return `${action.type} ${action.feature?.id} ${action.brushMode} ${action.translation.x}, ${action.translation.y}`;
 };
 
 // const applySubtractionToFeatures = (

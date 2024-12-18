@@ -37,7 +37,7 @@ export const usePointBrush = ({
   const points = useSharedValue<Position[]>([]);
   const brushModeRef = useRef<BrushMode>(brushMode);
 
-  const rlog = useRemoteLogContext();
+  // const rlog = useRemoteLogContext();
   const { screenToWorldPoints } = useStore();
 
   // const { addFeature } = useStoreActions();

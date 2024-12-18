@@ -5,9 +5,10 @@ import {
   applyFeatureDifference,
   applyFeatureUnion
 } from '@helpers/polyclip';
-import { BrushFeature } from '@types';
+import { BrushFeature, Vector2 } from '@types';
+import { translateAbsoluteBrushFeature } from '../brushFeature';
 import { FeatureRBush } from '../spatialIndex';
-import { AddFeatureOptions, BrushMode } from '../types';
+import { AddFeatureOptions, BrushMode, MoveFeatureOptions } from '../types';
 import { FeatureSlice } from './featureSlice';
 
 const log = createLogger('featureHelpers');
@@ -17,6 +18,14 @@ export type AddFeatureProps = {
   brushMode: BrushMode;
   feature: BrushFeature;
   options: AddFeatureOptions;
+};
+
+export type MoveFeatureProps = {
+  state: FeatureSlice;
+  brushMode: BrushMode;
+  feature: BrushFeature;
+  translation: Vector2;
+  options: MoveFeatureOptions;
 };
 
 export const removeFeatures = (state: FeatureSlice, featureIds: string[]) => {
@@ -35,6 +44,27 @@ export const removeFeatures = (state: FeatureSlice, featureIds: string[]) => {
   featuresToRemove.forEach((f) => state.spatialIndex.remove(f));
 
   return { ...state, features: featuresRemaining, selectedFeatures };
+};
+
+export const moveFeature = ({
+  state,
+  brushMode,
+  feature,
+  translation,
+  options
+}: MoveFeatureProps) => {
+  // log.debug('[moveFeature] moving', feature.id, translation, options);
+  const translated = translateAbsoluteBrushFeature(feature, translation);
+
+  // remove existing feature
+  state = removeFeatures(state, [feature.id! as string]);
+
+  return addFeature({
+    state,
+    brushMode,
+    feature: translated,
+    options
+  });
 };
 
 export const addFeature = ({
@@ -56,8 +86,9 @@ export const addFeature = ({
       features
     );
 
-    // log.debug('[addFeature] applyAddition added', addedCount);
-    // log.debug('[addFeature] applyAddition removed', removedCount);
+    if (options.selectFeature) {
+      state = selectFeature(state, feature.id! as string);
+    }
 
     if (addedCount > 0 || removedCount > 0) {
       return { ...state, features: updatedFeatures };
@@ -81,8 +112,9 @@ export const addFeature = ({
       addedCount,
       'removed',
       removedCount,
-      'new features',
-      performance.now() - timeMs
+      'new features in',
+      performance.now() - timeMs,
+      'ms'
     );
 
     if (addedCount > 0 || removedCount > 0) {
@@ -94,6 +126,15 @@ export const addFeature = ({
   features.push(feature);
 
   return { ...state, features };
+};
+
+const selectFeature = (state: FeatureSlice, featureId: string) => {
+  const selectedFeatures = [...state.selectedFeatures];
+  if (selectedFeatures.includes(featureId)) {
+    return state;
+  }
+  selectedFeatures.push(featureId);
+  return { ...state, selectedFeatures };
 };
 
 const applyAddition = (

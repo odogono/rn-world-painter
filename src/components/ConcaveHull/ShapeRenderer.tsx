@@ -38,7 +38,13 @@ export const ShapeRenderer = () => {
       const visibleIds = visibleFeatures
         .map((feature) => {
           const isSelected = feature.properties.isSelected;
-          return feature.id + (isSelected ? 'S' : '');
+          return (
+            feature.id +
+            ',' +
+            JSON.stringify(feature.bbox) +
+            ',' +
+            (isSelected ? 'S' : '')
+          );
         })
         .filter(Boolean)
         .join('|');

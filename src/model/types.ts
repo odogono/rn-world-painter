@@ -1,9 +1,10 @@
-import { BrushFeature } from '@types';
+import { BrushFeature, Vector2 } from '@types';
 
 export const ActionType = {
   ADD_BRUSH: 'addBrush',
   REMOVE_BRUSH: 'removeBrush',
   REMOVE_SELECTED: 'removeSelected',
+  MOVE_BRUSH: 'moveBrush',
   RESET: 'reset'
 } as const;
 
@@ -29,13 +30,18 @@ export type RemoveBrushAction = {
   featureIds: string[];
 };
 
-// export type RemoveSelectedAction = {
-//   type: typeof ActionType.REMOVE_SELECTED;
-// };
+export type MoveBrushAction = {
+  type: typeof ActionType.MOVE_BRUSH;
+  brushMode: BrushMode;
+  feature: BrushFeature;
+  translation: Vector2;
+  options?: AddFeatureOptions;
+};
 
-export type Action = AddBrushAction | RemoveBrushAction;
+export type Action = AddBrushAction | RemoveBrushAction | MoveBrushAction;
 
 export type AddFeatureOptions = {
   updateBBox?: boolean;
   brushMode?: BrushMode;
+  selectFeature?: boolean;
 };

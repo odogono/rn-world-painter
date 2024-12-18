@@ -3,7 +3,7 @@ import { Position as GeoJsonPosition, Polygon } from 'geojson';
 import { getBBoxCenter } from '@helpers/geo';
 import { generateShortUUID, generateUUID } from '@helpers/uuid';
 import { bbox as calculateBbox } from '@turf/bbox';
-import { BrushFeature, Position } from '@types';
+import { BrushFeature, Position, Vector2 } from '@types';
 
 export type CreateBrushFeatureOptions = {
   id?: string;
@@ -47,18 +47,48 @@ export const createBrushFeature = ({
   };
 };
 
-export const centerBrushFeature = (feature: BrushFeature) => {
+// export const centerBrushFeature = (feature: BrushFeature) => {
+//   const { bbox, geometry } = feature;
+//   const center = getBBoxCenter(bbox!);
+
+//   center.x = -center.x;
+//   center.y = -center.y;
+
+//   // translate all the points so that the feature is centered around 0,0
+//   const coordinates = geometry.coordinates.map((polygon) => {
+//     return polygon.map((point) => {
+//       return [point[0] + center.x, point[1] + center.y];
+//     });
+//   });
+
+//   const newGeometry = { ...geometry, coordinates };
+//   const newBbox = calculateBbox(newGeometry);
+
+//   return {
+//     ...feature,
+//     bbox: newBbox,
+//     geometry: newGeometry
+//   };
+// };
+
+export const translateAbsoluteBrushFeature = (
+  feature: BrushFeature,
+  translation?: Vector2 | undefined
+) => {
   const { bbox, geometry } = feature;
   const center = getBBoxCenter(bbox!);
 
-  console.log('center', center);
   center.x = -center.x;
   center.y = -center.y;
+
+  if (translation) {
+    center.x += translation.x;
+    center.y += translation.y;
+  }
 
   // translate all the points so that the feature is centered around 0,0
   const coordinates = geometry.coordinates.map((polygon) => {
     return polygon.map((point) => {
-      console.log('point', point, [point[0] + center.x, point[1] + center.y]);
       return [point[0] + center.x, point[1] + center.y];
     });
   });
@@ -71,4 +101,8 @@ export const centerBrushFeature = (feature: BrushFeature) => {
     bbox: newBbox,
     geometry: newGeometry
   };
+};
+
+export const copyBrushFeature = (feature: BrushFeature) => {
+  return JSON.parse(JSON.stringify(feature));
 };

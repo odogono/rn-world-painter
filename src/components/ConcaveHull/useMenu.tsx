@@ -9,7 +9,10 @@ const log = createLogger('useMenu');
 
 export const useMenu = () => {
   const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
-  const [brushMode, setBrushMode] = useState<BrushMode>(BrushMode.ADD);
+  // const [brushMode, setBrushMode] = useState<BrushMode>(BrushMode.ADD);
+  const setBrushMode = useStoreState().use.setBrushMode();
+  const brushMode = useStoreState().use.getBrushMode()();
+
   const { zoomOnPoint } = useStore();
 
   const removeSelectedFeatures = useStoreState().use.removeSelectedFeatures();

@@ -77,8 +77,8 @@ export const createFlowerMenuStore = (
       },
       merge: (persistedState, currentState) => {
         // todo - complete merging of state
-        log.debug('merge persisted', persistedState);
-        log.debug('merge current', currentState);
+        // log.debug('merge persisted', persistedState);
+        // log.debug('merge current', currentState);
         return currentState;
       }
     })
