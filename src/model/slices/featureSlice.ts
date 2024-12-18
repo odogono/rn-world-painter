@@ -44,6 +44,8 @@ export type FeatureSliceActions = {
   removeSelectedFeatures: () => void;
   handleTap: (point: Vector2) => void;
   getSelectedFeature: () => BrushFeature | undefined;
+  getFeatureIdsByPosition: (point: Vector2) => string[];
+  clearSelectedFeatures: () => void;
 
   undo: () => void;
   redo: () => void;
@@ -73,6 +75,12 @@ export const createFeatureSlice: StateCreator<
       return undefined;
     }
     return get().features.find((f) => f.id === selectedFeatures[0]);
+  },
+
+  getFeatureIdsByPosition: (point: Vector2) => {
+    return (get().spatialIndex.findByPosition(point, true) ?? []).map(
+      (f) => f.id
+    ) as string[];
   },
 
   removeSelectedFeatures: () =>
@@ -129,7 +137,11 @@ export const createFeatureSlice: StateCreator<
       // log.debug('[handleTap] selectedFeatures', selectedFeatures);
 
       return { ...state, selectedFeatures };
-    })
+    }),
+
+  clearSelectedFeatures: () => {
+    set((state) => ({ ...state, selectedFeatures: [] }));
+  }
 });
 
 const replayActions = (state: FeatureSlice) => {

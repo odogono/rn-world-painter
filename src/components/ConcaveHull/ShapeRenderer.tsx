@@ -71,7 +71,7 @@ export const ShapeRenderer = () => {
   );
 };
 
-const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
+export const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
   const path = useMemo(() => {
     const p = Skia.Path.Make();
     applyBrushFeatureToPath(shape, p);
@@ -87,10 +87,8 @@ const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
 
   return (
     <>
-      <Path path={path} color={color} style='stroke' strokeWidth={2} />
-      {bbox && (
-        <Rect rect={bbox} style='stroke' strokeWidth={0.5} color='blue' />
-      )}
+      <Path path={path} color={color} style='stroke' strokeWidth={1} />
+      {bbox && <Rect rect={bbox} style='stroke' strokeWidth={2} color='blue' />}
     </>
   );
 };

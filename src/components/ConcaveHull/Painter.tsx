@@ -27,7 +27,7 @@ import {
 } from '@model/useStore';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { MiniMap } from './MiniMap';
-import { ShapeRenderer } from './ShapeRenderer';
+import { ShapeComponent, ShapeRenderer } from './ShapeRenderer';
 import { useGesture } from './useGesture';
 import { useMenu } from './useMenu';
 import { useMove } from './useMove';
@@ -57,13 +57,12 @@ export const Painter = () => {
     ]
   );
 
-  const selectedFeature = useStoreState().use.getSelectedFeature()();
-
   const { brushPath, ...brushHandlers } = usePointBrush({ brushMode });
-  const moveHandlers = useMove();
+  const { isMoveShapeEnabled, moveShape, moveShapeMatrix, ...moveHandlers } =
+    useMove();
   const moveViewHandlers = useMoveView();
 
-  const gestureHandlers = selectedFeature
+  const gestureHandlers = isMoveShapeEnabled
     ? moveHandlers
     : isWorldMoveEnabled
       ? moveViewHandlers
@@ -141,6 +140,12 @@ export const Painter = () => {
               <MiniMap />
 
               <Path path={brushPath} color='black' />
+
+              {moveShape && (
+                <Group matrix={moveShapeMatrix}>
+                  <ShapeComponent shape={moveShape} />
+                </Group>
+              )}
             </ContextBridge>
           </Canvas>
         </GestureDetector>

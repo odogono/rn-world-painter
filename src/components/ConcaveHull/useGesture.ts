@@ -89,8 +89,8 @@ export const useGesture = ({
           if (onEnd) {
             onEnd();
           }
-        })
-        .minDistance(10),
+        }),
+    // .minDistance(10),
     [onStart, onChange, onUpdate, onEnd]
   );
 

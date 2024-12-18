@@ -46,3 +46,29 @@ export const createBrushFeature = ({
     geometry
   };
 };
+
+export const centerBrushFeature = (feature: BrushFeature) => {
+  const { bbox, geometry } = feature;
+  const center = getBBoxCenter(bbox!);
+
+  console.log('center', center);
+  center.x = -center.x;
+  center.y = -center.y;
+
+  // translate all the points so that the feature is centered around 0,0
+  const coordinates = geometry.coordinates.map((polygon) => {
+    return polygon.map((point) => {
+      console.log('point', point, [point[0] + center.x, point[1] + center.y]);
+      return [point[0] + center.x, point[1] + center.y];
+    });
+  });
+
+  const newGeometry = { ...geometry, coordinates };
+  const newBbox = calculateBbox(newGeometry);
+
+  return {
+    ...feature,
+    bbox: newBbox,
+    geometry: newGeometry
+  };
+};

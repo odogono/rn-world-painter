@@ -8,7 +8,7 @@ import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 const log = createLogger('useMenu');
 
 export const useMenu = () => {
-  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(false);
+  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
   const [brushMode, setBrushMode] = useState<BrushMode>(BrushMode.ADD);
   const { zoomOnPoint } = useStore();
 
