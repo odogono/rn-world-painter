@@ -64,7 +64,7 @@ export const BottomSheet = ({
       </Animated.View>
       <GorhomBottomSheet
         ref={ref}
-        snapPoints={snapPoints}
+        enableDynamicSizing
         index={-1}
         onChange={handleSheetChange}
         containerStyle={styles.bottomSheetContainer}
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    padding: 36,
+    padding: 10,
     alignItems: 'center'
   },
   handleStyle: {

@@ -145,7 +145,6 @@ const applyAddition = (
   const intersectingFeatures = spatialIndex.findByIntersecting(brush);
 
   const removeFeatures: BrushFeature[] = [];
-  // const newFeatures: BrushFeature[] = [];
 
   const addition = intersectingFeatures.reduce((brush, feature) => {
     const [result, unionFeature] = applyFeatureUnion(feature, brush);

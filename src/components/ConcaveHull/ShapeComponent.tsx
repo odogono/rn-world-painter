@@ -4,7 +4,17 @@ import { Path, Rect, SkPath, Skia } from '@shopify/react-native-skia';
 
 import { BrushFeature } from '@types';
 
-export const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
+export type ShapeComponentProps = {
+  shape: BrushFeature;
+  selectionColor?: string;
+  isFilled?: boolean;
+};
+
+export const ShapeComponent = ({
+  shape,
+  selectionColor = 'blue',
+  isFilled = true
+}: ShapeComponentProps) => {
   const path = useMemo(() => {
     const p = Skia.Path.Make();
     applyBrushFeatureToPath(shape, p);
@@ -18,10 +28,19 @@ export const ShapeComponent = ({ shape }: { shape: BrushFeature }) => {
 
   const color = shape.properties.color ?? '#444';
 
+  const style = isFilled ? 'fill' : 'stroke';
+
   return (
     <>
-      <Path path={path} color={color} style='stroke' strokeWidth={1} />
-      {bbox && <Rect rect={bbox} style='stroke' strokeWidth={2} color='blue' />}
+      <Path path={path} color={color} style={style} strokeWidth={1} />
+      {bbox && (
+        <Rect
+          rect={bbox}
+          style='stroke'
+          strokeWidth={2}
+          color={selectionColor}
+        />
+      )}
     </>
   );
 };

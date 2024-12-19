@@ -57,14 +57,12 @@ export const menuData: Node[] = [
       {
         id: 'undo',
         name: 'Undo',
-        icon: 'undo',
-        action: 'undo'
+        icon: 'undo'
       },
       {
         id: 'redo',
         name: 'Redo',
-        icon: 'redo',
-        action: 'redo'
+        icon: 'redo'
       }
     ]
   },
@@ -72,20 +70,19 @@ export const menuData: Node[] = [
     id: 'edit',
     name: 'Edit',
     icon: 'edit',
-    action: 'edit',
     position: { x: 'right-80', y: 'bottom-80' }
   },
   {
     id: 'pan',
     name: 'Pan',
     icon: 'pan-tool',
-    position: { x: 'right-80', y: 'bottom-160' },
-    action: 'pan'
+    position: { x: 'right-80', y: 'bottom-160' }
   },
   {
     id: 'palette',
     name: 'Palette',
     icon: 'palette',
+    color: 'cyan',
     position: { x: 'hcenter-30', y: 'bottom-80' }
   }
 ];

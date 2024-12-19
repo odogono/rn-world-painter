@@ -5,6 +5,7 @@ export const ActionType = {
   REMOVE_BRUSH: 'removeBrush',
   REMOVE_SELECTED: 'removeSelected',
   MOVE_BRUSH: 'moveBrush',
+  SET_BRUSH_COLOR: 'setBrushColor',
   RESET: 'reset'
 } as const;
 
@@ -38,7 +39,16 @@ export type MoveBrushAction = {
   options?: AddFeatureOptions;
 };
 
-export type Action = AddBrushAction | RemoveBrushAction | MoveBrushAction;
+export type SetBrushColorAction = {
+  type: typeof ActionType.SET_BRUSH_COLOR;
+  color: string;
+};
+
+export type Action =
+  | AddBrushAction
+  | RemoveBrushAction
+  | MoveBrushAction
+  | SetBrushColorAction;
 
 export type AddFeatureOptions = {
   updateBBox?: boolean;

@@ -19,32 +19,22 @@ export const applyFeatureUnion = (
 
   const diff = polyclip.union(poly1, poly2);
 
-  // const result: BrushFeature[] = [];
-
   if (diff.length === 0) {
     return [0, null];
   }
 
   if (diff.length > 1) {
-    log.warn('[applyFeatureUnion] result', diff.length);
+    if (diff.length !== 2) {
+      log.warn('[applyFeatureUnion] result', diff.length);
+    }
     return [0, null];
   }
 
-  // diff.forEach((poly) => {
   const feature = createBrushFeature({
     coordinates: diff[0],
-    id: featureB.id! as string
+    id: featureB.id! as string,
+    properties: { ...featureA.properties }
   });
-  // log.debug(
-  //   '[applyFeatureUnion] created brush',
-  //   feature.id,
-  //   'from',
-  //   featureA.id,
-  //   'and',
-  //   featureB.id
-  // );
-  // result.push(feature);
-  // });
 
   return [1, feature];
 };

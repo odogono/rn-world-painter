@@ -6,8 +6,7 @@ export type NodeState = {
   id: string;
   name: string;
   icon?: string;
-  // event name
-  action?: string;
+  color?: string;
   selectedChild: number;
   children: string[];
   parentId?: string | undefined;
@@ -21,7 +20,7 @@ export type Node = {
   id: string;
   name: string;
   icon?: string;
-  action?: string;
+  color?: string;
   openOnFocus?: boolean;
   children?: Node[];
   position?: Vector2WithLayout;

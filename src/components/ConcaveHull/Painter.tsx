@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Canvas, Group, Path, useCanvasRef } from '@shopify/react-native-skia';
@@ -55,6 +55,9 @@ export const Painter = () => {
   const resetFeatures = useStoreState().use.resetFeatures();
   const applyAction = useStoreState().use.applyAction();
 
+  const brushColor = useStoreState().use.getBrushColor()();
+  const setBrushColor = useStoreState().use.setBrushColor();
+
   const [mViewMatrix, mViewPosition, mViewScale, mViewBBox] = useStoreSelector(
     (state) => [
       state.mViewMatrix,
@@ -82,6 +85,13 @@ export const Painter = () => {
     ...gestureHandlers
   });
 
+  const handleSelectColor = useCallback((color: string) => {
+    log.debug('handleSelectColor', color);
+    setIsPaletteOpen(false);
+    setBrushColor(color);
+  }, []);
+
+  // starting features
   useEffect(() => {
     applyAction({
       type: ActionType.ADD_BRUSH,
@@ -163,11 +173,12 @@ export const Painter = () => {
           panNodeIsActive={isWorldMoveEnabled}
           brushAddNodeIsActive={brushMode === BrushMode.ADD}
           brushRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
+          paletteNodeColor={brushColor}
         />
 
         <PaletteBottomSheet
           isOpen={isPaletteOpen}
-          onClose={() => setIsPaletteOpen(false)}
+          onColorSelected={handleSelectColor}
         />
         <Debug />
       </MenuProvider>

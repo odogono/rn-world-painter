@@ -36,11 +36,11 @@ export const usePointBrush = ({
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<Position[]>([]);
   const brushModeRef = useRef<BrushMode>(brushMode);
+  const getBrushColor = useStoreState().use.getBrushColor();
 
   // const rlog = useRemoteLogContext();
   const { screenToWorldPoints } = useStore();
 
-  // const { addFeature } = useStoreActions();
   const applyAction = useStoreState().use.applyAction();
 
   const brushSize = useSharedValue(30);
@@ -60,7 +60,10 @@ export const usePointBrush = ({
     // create a geojson feature
     const feature = createBrushFeature({
       points: simplified,
-      isLocal: false
+      isLocal: false,
+      properties: {
+        color: getBrushColor()
+      }
     });
     log.debug('[generateConcaveHull] created brush', feature.id);
 

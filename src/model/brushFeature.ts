@@ -18,7 +18,7 @@ export const createBrushFeature = ({
   isLocal = false,
   points,
   coordinates,
-  properties = {}
+  properties: additionalProperties = {}
 }: CreateBrushFeatureOptions): BrushFeature => {
   const geometry: Polygon = {
     type: 'Polygon',
@@ -33,43 +33,21 @@ export const createBrushFeature = ({
   // calculate the center of the bbox
   // const center: Position = [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
 
+  const properties = {
+    position: center,
+    isLocal,
+    color: '#444',
+    ...additionalProperties
+  };
+
   return {
     type: 'Feature',
     id,
     bbox,
-    properties: {
-      position: center,
-      isLocal,
-      color: '#444',
-      ...properties
-    },
+    properties,
     geometry
   };
 };
-
-// export const centerBrushFeature = (feature: BrushFeature) => {
-//   const { bbox, geometry } = feature;
-//   const center = getBBoxCenter(bbox!);
-
-//   center.x = -center.x;
-//   center.y = -center.y;
-
-//   // translate all the points so that the feature is centered around 0,0
-//   const coordinates = geometry.coordinates.map((polygon) => {
-//     return polygon.map((point) => {
-//       return [point[0] + center.x, point[1] + center.y];
-//     });
-//   });
-
-//   const newGeometry = { ...geometry, coordinates };
-//   const newBbox = calculateBbox(newGeometry);
-
-//   return {
-//     ...feature,
-//     bbox: newBbox,
-//     geometry: newGeometry
-//   };
-// };
 
 export const translateAbsoluteBrushFeature = (
   feature: BrushFeature,

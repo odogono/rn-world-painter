@@ -225,7 +225,7 @@ const createNodeState = (node: Node, parentId?: string): NodeState => {
     id: node.id,
     name: node.name,
     icon: node.icon,
-    action: node.action,
+    color: node.color,
     position: makeMutable(parseVector2WithLayout(node.position)),
     selectedChild: (node.children?.length ?? 0) === 0 ? -1 : 0,
     children: node.children?.map((child) => child.id) ?? [],

@@ -1,24 +1,15 @@
 import { StateCreator } from 'zustand';
 
-import {
-  bboxToLayoutRectangle,
-  bboxToString,
-  calculateBBox,
-  coordinatesToString
-} from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
+import { Action, ActionType, BrushMode } from '../types';
 import {
-  Action,
-  ActionType,
-  AddBrushAction,
-  AddFeatureOptions,
-  BrushMode,
-  MoveBrushAction,
-  RemoveBrushAction
-} from '../types';
-import { addFeature, moveFeature, removeFeatures } from './featureHelpers';
+  applyAction,
+  applyActionInternal,
+  redoAction,
+  undoAction
+} from './actions';
 
 export type FeatureSliceProps = {
   features: BrushFeature[];
@@ -27,6 +18,7 @@ export type FeatureSliceProps = {
   undoStack: Action[];
   redoStack: Action[];
   brushMode: BrushMode;
+  brushColor: string;
 };
 
 const defaultState: FeatureSliceProps = {
@@ -35,12 +27,15 @@ const defaultState: FeatureSliceProps = {
   selectedFeatures: [],
   undoStack: [],
   redoStack: [],
-  brushMode: BrushMode.ADD
+  brushMode: BrushMode.ADD,
+  brushColor: '#5c5c5c'
 };
 
 export type FeatureSliceActions = {
   setBrushMode: (brushMode: BrushMode) => void;
   getBrushMode: () => BrushMode;
+  setBrushColor: (color: string) => void;
+  getBrushColor: () => string;
 
   applyAction: (action: Action) => void;
   // addFeature: (feature: BrushFeature, options?: AddFeatureOptions) => void;
@@ -79,6 +74,14 @@ export const createFeatureSlice: StateCreator<
     set((state) => ({ ...state, brushMode })),
 
   getBrushMode: () => get().brushMode,
+
+  setBrushColor: (color: string) =>
+    set((state) =>
+      // applyAction(state, { type: ActionType.SET_BRUSH_COLOR, color })
+      ({ ...state, brushColor: color })
+    ),
+
+  getBrushColor: () => get().brushColor,
 
   applyAction: (action: Action) => set((state) => applyAction(state, action)),
 
@@ -182,138 +185,6 @@ export const createFeatureSlice: StateCreator<
     set((state) => ({ ...state, selectedFeatures: [] }));
   }
 });
-
-const replayActions = (state: FeatureSlice) => {
-  // clear everything
-  const newState = { ...state, features: [], selectedFeatures: [] };
-  newState.spatialIndex.clear();
-
-  return state.undoStack.reduce<FeatureSlice>((state, action) => {
-    return applyActionInternal(state, action);
-  }, newState);
-};
-
-const applyAction = (state: FeatureSlice, action: Action) => {
-  state = applyActionInternal(state, action);
-
-  // add the action to the undo stack
-  state = {
-    ...state,
-    undoStack: [...state.undoStack, action],
-    redoStack: []
-  };
-
-  printHistory(state);
-
-  return state;
-};
-
-const undoAction = (state: FeatureSlice) => {
-  // pop the last action from the undo stack
-  const action = state.undoStack.pop();
-
-  if (!action) {
-    return state;
-  }
-
-  // add the action to the redo stack
-  state = { ...state, redoStack: [...state.redoStack, action] };
-
-  state = replayActions(state);
-
-  log.debug(
-    '[undo] undo stack',
-    state.undoStack.length,
-    'redo stack',
-    state.redoStack.length
-  );
-
-  printHistory(state);
-
-  return state;
-};
-
-const redoAction = (state: FeatureSlice) => {
-  // pop the last action from the redo stack
-  const action = state.redoStack.pop();
-
-  if (!action) {
-    return state;
-  }
-
-  // add the action to the undo stack
-  state = { ...state, undoStack: [...state.undoStack, action] };
-
-  state = applyActionInternal(state, action);
-
-  printHistory(state);
-
-  return state;
-};
-
-const applyActionInternal = (state: FeatureSlice, action: Action) => {
-  switch (action.type) {
-    case ActionType.ADD_BRUSH:
-      return addFeature({
-        state,
-        brushMode: action.brushMode,
-        feature: action.feature,
-        options: action.options ?? {}
-      });
-    case ActionType.MOVE_BRUSH:
-      return moveFeature({
-        state,
-        brushMode: action.brushMode,
-        feature: action.feature,
-        translation: action.translation,
-        options: action.options ?? {}
-      });
-    case ActionType.REMOVE_BRUSH:
-      return removeFeatures(state, action.featureIds);
-    default:
-      return state;
-  }
-};
-
-const printHistory = (state: FeatureSlice) => {
-  state.undoStack.forEach((action, ii) => {
-    log.debug('[undo]', ii, actionToString(action));
-  });
-  if (state.undoStack.length === 0) {
-    log.debug('[undo] empty');
-  }
-  state.redoStack.forEach((action, ii) => {
-    log.debug('[redo]', ii, actionToString(action));
-  });
-  if (state.redoStack.length === 0) {
-    log.debug('[redo] empty');
-  }
-};
-
-const actionToString = (action: Action) => {
-  switch (action.type) {
-    case ActionType.ADD_BRUSH:
-      return addBrushActionToString(action as AddBrushAction);
-    case ActionType.REMOVE_BRUSH:
-      return removeBrushActionToString(action as RemoveBrushAction);
-    case ActionType.MOVE_BRUSH:
-      return moveBrushActionToString(action as MoveBrushAction);
-    default:
-      return JSON.stringify(action);
-  }
-};
-
-const addBrushActionToString = (action: AddBrushAction) => {
-  return `${action.type} ${action.brushMode} ${action.feature?.id}`;
-};
-
-const removeBrushActionToString = (action: RemoveBrushAction) => {
-  return `${action.type} ${action.featureIds.join(', ')}`;
-};
-
-const moveBrushActionToString = (action: MoveBrushAction) => {
-  return `${action.type} ${action.feature?.id} ${action.brushMode} ${action.translation.x}, ${action.translation.y}`;
-};
 
 // const applySubtractionToFeatures = (
 //   srcFeature: BrushFeature,
