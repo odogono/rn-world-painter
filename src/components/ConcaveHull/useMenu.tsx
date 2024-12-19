@@ -9,7 +9,8 @@ const log = createLogger('useMenu');
 
 export const useMenu = () => {
   const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
-  // const [brushMode, setBrushMode] = useState<BrushMode>(BrushMode.ADD);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+
   const setBrushMode = useStoreState().use.setBrushMode();
   const brushMode = useStoreState().use.getBrushMode()();
 
@@ -46,6 +47,9 @@ export const useMenu = () => {
       case 'brushDelete':
         removeSelectedFeatures();
         break;
+      case 'palette':
+        setIsPaletteOpen(true);
+        break;
       case 'undo':
         undo();
         break;
@@ -72,6 +76,8 @@ export const useMenu = () => {
   return {
     MenuProvider,
     isWorldMoveEnabled,
-    brushMode
+    brushMode,
+    isPaletteOpen,
+    setIsPaletteOpen
   };
 };

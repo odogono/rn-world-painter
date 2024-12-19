@@ -81,5 +81,11 @@ export const menuData: Node[] = [
     icon: 'pan-tool',
     position: { x: 'right-80', y: 'bottom-160' },
     action: 'pan'
+  },
+  {
+    id: 'palette',
+    name: 'Palette',
+    icon: 'palette',
+    position: { x: 'hcenter-30', y: 'bottom-80' }
   }
 ];

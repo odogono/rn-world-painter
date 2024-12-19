@@ -14,7 +14,7 @@ import {
   setDebugMsg2
 } from '@components/Debug/Debug';
 import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
-import { useEvents } from '@contexts/Events';
+import { PaletteBottomSheet } from '@components/PaletteBottomSheet/PaletteBottomSheet';
 import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { ActionType, BrushMode } from '@model/types';
@@ -27,10 +27,11 @@ import {
 } from '@model/useStore';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { MiniMap } from './MiniMap';
-import { ShapeComponent, ShapeRenderer } from './ShapeRenderer';
+import { ShapeComponent } from './ShapeComponent';
+import { ShapeRenderer } from './ShapeRenderer';
 import { useGesture } from './useGesture';
 import { useMenu } from './useMenu';
-import { useMove } from './useMove';
+import { useMoveShape } from './useMoveShape';
 import { useMoveView } from './useMoveView';
 import { usePointBrush } from './usePointBrush';
 
@@ -40,7 +41,13 @@ export const Painter = () => {
   const ContextBridge = useContextBridge();
   const canvasRef = useCanvasRef();
 
-  const { MenuProvider, isWorldMoveEnabled, brushMode } = useMenu();
+  const {
+    MenuProvider,
+    isWorldMoveEnabled,
+    brushMode,
+    isPaletteOpen,
+    setIsPaletteOpen
+  } = useMenu();
 
   const setViewLayout = useStoreSetViewLayout();
   const viewLayout = useStoreViewLayout();
@@ -59,7 +66,7 @@ export const Painter = () => {
 
   const { brushPath, ...brushHandlers } = usePointBrush({ brushMode });
   const { isMoveShapeEnabled, moveShape, moveShapeMatrix, ...moveHandlers } =
-    useMove();
+    useMoveShape();
   const moveViewHandlers = useMoveView();
 
   const gestureHandlers = isMoveShapeEnabled
@@ -158,6 +165,10 @@ export const Painter = () => {
           brushRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
         />
 
+        <PaletteBottomSheet
+          isOpen={isPaletteOpen}
+          onClose={() => setIsPaletteOpen(false)}
+        />
         <Debug />
       </MenuProvider>
     </View>

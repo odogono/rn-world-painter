@@ -27,7 +27,7 @@ export type UseMoveResult = UseGestureProps & {
 
 const log = createLogger('useMove');
 
-export const useMove = (): UseMoveResult => {
+export const useMoveShape = (): UseMoveResult => {
   const moveShapeMatrix = useSharedValue(Skia.Matrix());
   const moveShapeStartPosition = useSharedValue({ x: 0, y: 0 });
   const moveShapePosition = useSharedValue({ x: 0, y: 0 });
@@ -78,8 +78,7 @@ export const useMove = (): UseMoveResult => {
         shapeIdsAtPosition.length === 0 ||
         !shapeIdsAtPosition.includes(selectedFeature.id as string)
       ) {
-        log.debug(`useMove ${selectedFeature.id} not hit`);
-        // setIsMoveShapeEnabled(false);
+        log.debug(`[mountMoveShape] ${selectedFeature.id} not hit`);
         clearSelectedFeatures();
         return;
       }
