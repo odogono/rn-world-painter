@@ -44,6 +44,9 @@ export const useMenu = () => {
       case 'brushRemove':
         setBrushMode(BrushMode.SUBTRACT);
         break;
+      case 'brushIntersect':
+        setBrushMode(BrushMode.INTERSECT);
+        break;
       case 'brushDelete':
         removeSelectedFeatures();
         break;

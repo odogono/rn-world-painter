@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { getContrastColor } from '@helpers/color';
 import { createLogger } from '@helpers/log';
 import { useFlowerMenuNode, useMenuStore } from './store/context';
@@ -31,7 +31,7 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
   const node = useFlowerMenuNode(nodeId);
 
   // const nodeState = useMenuStore().use.getNodeState()(nodeId);
-  const nodeIcon = useMenuStore().use.getNodeIcon()(nodeId);
+  let nodeIcon = useMenuStore().use.getNodeIcon()(nodeId);
   const handleNodeTap = useMenuStore().use.handleNodeSelect();
   const handleNodeDragStart = useMenuStore().use.handleNodeDragStart();
   const handleNodeDragEnd = useMenuStore().use.handleNodeDragEnd();
@@ -39,6 +39,14 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
   const isChild = node.parentId !== undefined;
   const nodeColor = node.isActive ? '#c2c2c2' : (node.color ?? '#FFFFFF');
   const iconColor = getContrastColor(nodeColor);
+  let isMaterialCommunityIcon = false;
+
+  if (nodeIcon?.startsWith('material-community:')) {
+    nodeIcon = nodeIcon.replace('material-community:', '');
+    isMaterialCommunityIcon = true;
+  }
+
+  const Icon = isMaterialCommunityIcon ? MaterialCommunityIcons : MaterialIcons;
 
   const gesture = useFlowerNodeGestures({
     handleNodeTap,
@@ -69,8 +77,8 @@ export const FlowerNodeComponent = ({ nodeId }: FlowerNodeComponentProps) => {
           isChild ? styles.isChild : {}
         ]}
       >
-        <MaterialIcons
-          name={nodeIcon as keyof typeof MaterialIcons.glyphMap}
+        <Icon
+          name={nodeIcon as keyof typeof Icon.glyphMap}
           size={24}
           color={iconColor}
         />

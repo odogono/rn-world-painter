@@ -3,6 +3,7 @@ import { createLogger } from '@helpers/log';
 import {
   POLYCLIP_RESULT_UNCHANGED,
   applyFeatureDifference,
+  applyFeatureIntersection,
   applyFeatureUnion
 } from '@helpers/polyclip';
 import { BrushFeature, Vector2 } from '@types';
@@ -79,6 +80,7 @@ export const addFeature = ({
     feature.bbox = calculateBBox(feature.geometry);
   }
 
+  const timeMs = performance.now();
   if (brushMode === BrushMode.ADD) {
     const [addedCount, removedCount, updatedFeatures] = applyAddition(
       feature,
@@ -99,8 +101,6 @@ export const addFeature = ({
 
     return { ...state, features };
   } else if (brushMode === BrushMode.SUBTRACT) {
-    const timeMs = performance.now();
-
     const [addedCount, removedCount, updatedFeatures] = applySubtraction(
       feature,
       state.spatialIndex,
@@ -109,6 +109,25 @@ export const addFeature = ({
 
     log.debug(
       '[addFeature] applySubtraction added',
+      addedCount,
+      'removed',
+      removedCount,
+      'new features in',
+      performance.now() - timeMs,
+      'ms'
+    );
+
+    if (addedCount > 0 || removedCount > 0) {
+      return { ...state, features: updatedFeatures };
+    }
+  } else if (brushMode === BrushMode.INTERSECT) {
+    const [addedCount, removedCount, updatedFeatures] = applyIntersection(
+      feature,
+      state.spatialIndex,
+      features
+    );
+    log.debug(
+      '[addFeature] applyIntersection added',
       addedCount,
       'removed',
       removedCount,
@@ -201,6 +220,44 @@ const applySubtraction = (
   if (newFeatures.length === 0 && removeFeatures.length === 0) {
     return [0, 0, features];
   }
+
+  // remote the existing features
+  removeFeatures.forEach((feature) => {
+    spatialIndex.remove(feature);
+    features = features.filter((f) => f.id !== feature.id);
+  });
+
+  // add the new features
+  newFeatures.forEach((feature) => {
+    spatialIndex.insert(feature);
+    features.push(feature);
+  });
+
+  return [newFeatures.length, removeFeatures.length, features];
+};
+
+const applyIntersection = (
+  brush: BrushFeature,
+  spatialIndex: FeatureRBush,
+  features: BrushFeature[]
+): [number, number, BrushFeature[]] => {
+  const intersectingFeatures = spatialIndex.findByIntersecting(brush);
+
+  if (!intersectingFeatures.length) {
+    return [0, 0, features];
+  }
+
+  const removeFeatures: BrushFeature[] = [];
+  const newFeatures: BrushFeature[] = [];
+
+  intersectingFeatures.forEach((feature) => {
+    const [result, features] = applyFeatureIntersection(feature, brush);
+
+    if (result !== POLYCLIP_RESULT_UNCHANGED) {
+      removeFeatures.push(feature);
+    }
+    newFeatures.push(...features);
+  });
 
   // remote the existing features
   removeFeatures.forEach((feature) => {

@@ -11,12 +11,17 @@ export const menuData: Node[] = [
       {
         id: 'brushAdd',
         name: 'Add',
-        icon: 'add-circle-outline'
+        icon: 'material-community:vector-union'
       },
       {
         id: 'brushRemove',
         name: 'Remove',
-        icon: 'remove-circle-outline'
+        icon: 'material-community:vector-difference'
+      },
+      {
+        id: 'brushIntersect',
+        name: 'Intersect',
+        icon: 'material-community:vector-intersection'
       },
       {
         id: 'brushDelete',
@@ -75,7 +80,7 @@ export const menuData: Node[] = [
   {
     id: 'pan',
     name: 'Pan',
-    icon: 'pan-tool',
+    icon: 'material-community:pan',
     position: { x: 'right-80', y: 'bottom-160' }
   },
   {

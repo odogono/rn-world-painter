@@ -173,6 +173,7 @@ export const Painter = () => {
           panNodeIsActive={isWorldMoveEnabled}
           brushAddNodeIsActive={brushMode === BrushMode.ADD}
           brushRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
+          brushIntersectNodeIsActive={brushMode === BrushMode.INTERSECT}
           paletteNodeColor={brushColor}
         />
 
