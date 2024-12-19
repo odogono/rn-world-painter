@@ -15,6 +15,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/images/icon.png',
   scheme: 'myapp',
   userInterfaceStyle: 'automatic',
+  assetBundlePatterns: ['**/*'],
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
@@ -41,6 +42,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         imageWidth: 200,
         resizeMode: 'contain',
         backgroundColor: '#ffffff'
+      }
+    ],
+    [
+      'expo-font',
+      {
+        fonts: [
+          './node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf',
+          './node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf'
+        ]
       }
     ]
   ],

@@ -104,12 +104,15 @@ export const createFeatureSlice: StateCreator<
   },
 
   removeSelectedFeatures: () =>
-    set((state) =>
-      applyAction(state, {
+    set((state) => {
+      if (state.selectedFeatures.length === 0) {
+        return state;
+      }
+      return applyAction(state, {
         type: ActionType.REMOVE_BRUSH,
         featureIds: state.selectedFeatures
-      })
-    ),
+      });
+    }),
 
   removeFeature: (feature: BrushFeature) =>
     set((state) =>

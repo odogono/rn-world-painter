@@ -1,14 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import ColorPicker, {
-  HueSlider,
-  OpacitySlider,
-  Panel5,
-  Preview,
-  Swatches,
-  returnedResults
-} from 'reanimated-color-picker';
+import ColorPicker, { Panel5, returnedResults } from 'reanimated-color-picker';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { createLogger } from '@helpers/log';
@@ -32,7 +25,7 @@ export const PaletteBottomSheet = (props: PaletteBottomSheetProps) => {
   }, []);
 
   return (
-    <BottomSheet {...props}>
+    <BottomSheet {...props} onClose={handleClosePress}>
       <ColorPicker
         style={styles.contentContainer}
         value={selectedColor}
