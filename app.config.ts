@@ -47,6 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-font',
       {
+        assetBundlePatterns: ['**/*'],
         fonts: [
           './node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf',
           './node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf'
