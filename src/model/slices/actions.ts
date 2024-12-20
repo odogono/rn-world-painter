@@ -28,7 +28,7 @@ export const applyAction = (state: FeatureSlice, action: Action) => {
   // add the action to the undo stack
   state = {
     ...state,
-    undoStack: [...state.undoStack, action],
+    undoStack: [...state.undoStack, copyAction(action)],
     redoStack: []
   };
 
@@ -80,19 +80,23 @@ export const redoAction = (state: FeatureSlice) => {
   return state;
 };
 
+const copyAction = (action: Action) => {
+  return JSON.parse(JSON.stringify(action));
+};
+
 export const applyActionInternal = (state: FeatureSlice, action: Action) => {
   switch (action.type) {
     case ActionType.ADD_BRUSH:
       return addFeature({
         state,
-        brushMode: action.brushMode,
+        brushOperation: action.brushOperation,
         feature: action.feature,
         options: action.options ?? {}
       });
     case ActionType.MOVE_BRUSH:
       return moveFeature({
         state,
-        brushMode: action.brushMode,
+        brushOperation: action.brushOperation,
         feature: action.feature,
         translation: action.translation,
         options: action.options ?? {}
@@ -137,7 +141,7 @@ export const actionToString = (action: Action) => {
 };
 
 const addBrushActionToString = (action: AddBrushAction) => {
-  return `${action.type} ${action.brushMode} ${action.feature?.id}`;
+  return `${action.type} ${action.brushOperation} ${action.feature?.id}`;
 };
 
 const removeBrushActionToString = (action: RemoveBrushAction) => {
@@ -145,7 +149,7 @@ const removeBrushActionToString = (action: RemoveBrushAction) => {
 };
 
 const moveBrushActionToString = (action: MoveBrushAction) => {
-  return `${action.type} ${action.feature?.id} ${action.brushMode} ${action.translation.x}, ${action.translation.y}`;
+  return `${action.type} ${action.feature?.id} ${action.brushOperation} ${action.translation.x}, ${action.translation.y}`;
 };
 
 const setBrushColorActionToString = (action: SetBrushColorAction) => {

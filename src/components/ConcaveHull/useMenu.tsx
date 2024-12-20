@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { createLogger } from '@helpers/log';
-import { BrushMode } from '@model/types';
+import { BrushOperation } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
 import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 
@@ -12,8 +12,8 @@ export const useMenu = () => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isBrushPaletteOpen, setIsBrushPaletteOpen] = useState(false);
 
-  const setBrushMode = useStoreState().use.setBrushMode();
-  const brushMode = useStoreState().use.getBrushMode()();
+  const setBrushOperation = useStoreState().use.setBrushOperation();
+  const brushOperation = useStoreState().use.brushOperation();
 
   const { zoomOnPoint } = useStore();
 
@@ -39,14 +39,14 @@ export const useMenu = () => {
       case 'reset':
         zoomOnPoint({ toScale: 1 });
         break;
-      case 'brushModeAdd':
-        setBrushMode(BrushMode.ADD);
+      case 'brushOperationAdd':
+        setBrushOperation(BrushOperation.ADD);
         break;
-      case 'brushModeRemove':
-        setBrushMode(BrushMode.SUBTRACT);
+      case 'brushOperationRemove':
+        setBrushOperation(BrushOperation.SUBTRACT);
         break;
-      case 'brushModeIntersect':
-        setBrushMode(BrushMode.INTERSECT);
+      case 'brushOperationIntersect':
+        setBrushOperation(BrushOperation.INTERSECT);
         break;
       case 'brushDelete':
         removeSelectedFeatures();
@@ -83,7 +83,7 @@ export const useMenu = () => {
   return {
     MenuProvider,
     isWorldMoveEnabled,
-    brushMode,
+    brushOperation,
     isPaletteOpen,
     setIsPaletteOpen,
     isBrushPaletteOpen,

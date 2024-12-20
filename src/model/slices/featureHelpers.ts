@@ -9,21 +9,25 @@ import {
 import { BrushFeature, Vector2 } from '@types';
 import { translateAbsoluteBrushFeature } from '../brushFeature';
 import { FeatureRBush } from '../spatialIndex';
-import { AddFeatureOptions, BrushMode, MoveFeatureOptions } from '../types';
+import {
+  AddFeatureOptions,
+  BrushOperation,
+  MoveFeatureOptions
+} from '../types';
 import { FeatureSlice } from './featureSlice';
 
 const log = createLogger('featureHelpers');
 
 export type AddFeatureProps = {
   state: FeatureSlice;
-  brushMode: BrushMode;
+  brushOperation: BrushOperation;
   feature: BrushFeature;
   options: AddFeatureOptions;
 };
 
 export type MoveFeatureProps = {
   state: FeatureSlice;
-  brushMode: BrushMode;
+  brushOperation: BrushOperation;
   feature: BrushFeature;
   translation: Vector2;
   options: MoveFeatureOptions;
@@ -49,7 +53,7 @@ export const removeFeatures = (state: FeatureSlice, featureIds: string[]) => {
 
 export const moveFeature = ({
   state,
-  brushMode,
+  brushOperation,
   feature,
   translation,
   options
@@ -62,7 +66,7 @@ export const moveFeature = ({
 
   return addFeature({
     state,
-    brushMode,
+    brushOperation,
     feature: translated,
     options
   });
@@ -70,7 +74,7 @@ export const moveFeature = ({
 
 export const addFeature = ({
   state,
-  brushMode,
+  brushOperation,
   feature,
   options
 }: AddFeatureProps) => {
@@ -81,7 +85,7 @@ export const addFeature = ({
   }
 
   const timeMs = performance.now();
-  if (brushMode === BrushMode.ADD) {
+  if (brushOperation === BrushOperation.ADD) {
     const [addedCount, removedCount, updatedFeatures] = applyAddition(
       feature,
       state.spatialIndex,
@@ -100,7 +104,7 @@ export const addFeature = ({
     features.push(feature);
 
     return { ...state, features };
-  } else if (brushMode === BrushMode.SUBTRACT) {
+  } else if (brushOperation === BrushOperation.SUBTRACT) {
     const [addedCount, removedCount, updatedFeatures] = applySubtraction(
       feature,
       state.spatialIndex,
@@ -120,7 +124,7 @@ export const addFeature = ({
     if (addedCount > 0 || removedCount > 0) {
       return { ...state, features: updatedFeatures };
     }
-  } else if (brushMode === BrushMode.INTERSECT) {
+  } else if (brushOperation === BrushOperation.INTERSECT) {
     const [addedCount, removedCount, updatedFeatures] = applyIntersection(
       feature,
       state.spatialIndex,

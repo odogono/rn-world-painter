@@ -26,7 +26,7 @@ export const ShapeComponent = ({
     return isSelected ? path.computeTightBounds() : null;
   }, [isSelected, path]);
 
-  const color = shape.properties.color ?? '#444';
+  const color = shape.properties.color ?? '#0061fd';
 
   const style = isFilled ? 'fill' : 'stroke';
 

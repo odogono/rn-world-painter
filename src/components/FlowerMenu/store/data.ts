@@ -2,24 +2,24 @@ import type { Node } from '../types';
 
 export const menuData: Node[] = [
   {
-    id: 'brushMode',
-    name: 'BrushMode',
+    id: 'brushOperation',
+    name: 'brushOperation',
     icon: 'build',
     isOpen: true,
     position: { x: 'left+10', y: 'vcenter-30' },
     children: [
       {
-        id: 'brushModeAdd',
+        id: 'brushOperationAdd',
         name: 'Add',
         icon: 'material-community:vector-union'
       },
       {
-        id: 'brushModeRemove',
+        id: 'brushOperationRemove',
         name: 'Remove',
         icon: 'material-community:vector-difference'
       },
       {
-        id: 'brushModeIntersect',
+        id: 'brushOperationIntersect',
         name: 'Intersect',
         icon: 'material-community:vector-intersection'
       },

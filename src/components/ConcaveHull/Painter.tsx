@@ -28,7 +28,7 @@ import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
 import { PaletteBottomSheet } from '@components/PaletteBottomSheet/PaletteBottomSheet';
 import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
-import { ActionType, BrushMode } from '@model/types';
+import { ActionType, BrushOperation } from '@model/types';
 import {
   useStore,
   useStoreSelector,
@@ -46,7 +46,7 @@ import { useMenu } from './useMenu';
 import { useMoveShape } from './useMoveShape';
 import { useMoveView } from './useMoveView';
 import { usePointBrush } from './usePointBrush';
-import { useShapeBrush } from './useShapeBrush';
+import { PaintMode, useShapeBrush } from './useShapeBrush';
 
 const log = createLogger('Painter');
 
@@ -62,7 +62,7 @@ export const Painter = () => {
   const {
     MenuProvider,
     isWorldMoveEnabled,
-    brushMode,
+    brushOperation,
     isPaletteOpen,
     setIsPaletteOpen,
     isBrushPaletteOpen,
@@ -88,11 +88,11 @@ export const Painter = () => {
   );
 
   const shapeHandlers = useShapeBrush({
-    brushMode,
     brushPath,
-    setBrushPathProps
+    setBrushPathProps,
+    paintMode: PaintMode.PLACE
   });
-  // const brushHandlers = usePointBrush({ brushMode, brushPath });
+
   const { isMoveShapeEnabled, moveShape, moveShapeMatrix, ...moveHandlers } =
     useMoveShape();
   const moveViewHandlers = useMoveView();
@@ -126,12 +126,12 @@ export const Painter = () => {
     applyAction({
       type: ActionType.ADD_BRUSH,
       feature: testFeature as BrushFeature,
-      brushMode: BrushMode.ADD
+      brushOperation: BrushOperation.ADD
     });
     applyAction({
       type: ActionType.ADD_BRUSH,
       feature: testFeature2 as BrushFeature,
-      brushMode: BrushMode.ADD
+      brushOperation: BrushOperation.ADD
     });
 
     return () => {
@@ -154,7 +154,7 @@ export const Painter = () => {
 
   // useRenderingTrace('Painter', {
   //   isWorldMoveEnabled,
-  //   brushMode,
+  //   brushOperation,
   //   viewLayout,
   //   addFeature,
   //   resetFeatures,
@@ -237,9 +237,13 @@ export const Painter = () => {
           viewLayout={viewLayout}
           editNodeIsActive={!isWorldMoveEnabled}
           panNodeIsActive={isWorldMoveEnabled}
-          brushModeAddNodeIsActive={brushMode === BrushMode.ADD}
-          brushModeRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
-          brushModeIntersectNodeIsActive={brushMode === BrushMode.INTERSECT}
+          brushOperationAddNodeIsActive={brushOperation === BrushOperation.ADD}
+          brushOperationRemoveNodeIsActive={
+            brushOperation === BrushOperation.SUBTRACT
+          }
+          brushOperationIntersectNodeIsActive={
+            brushOperation === BrushOperation.INTERSECT
+          }
           paletteNodeColor={brushColor}
         />
 

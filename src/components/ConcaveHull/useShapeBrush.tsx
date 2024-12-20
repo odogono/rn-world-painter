@@ -1,24 +1,37 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import { SkPath, Skia } from '@shopify/react-native-skia';
-import { SharedValue, runOnJS, useSharedValue } from 'react-native-reanimated';
+import {
+  SharedValue,
+  runOnJS,
+  useDerivedValue,
+  useSharedValue
+} from 'react-native-reanimated';
 
 import shapes from '@assets/shapes.json';
 import { generateConcaveHull } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { createBrushFeature, svgPathToBrushFeature } from '@model/brushFeature';
-import { ActionType, BrushMode } from '@model/types';
+import { ActionType, BrushOperation } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
 import { BrushFeature, Position, Rect2, SkiaPathProps, Vector2 } from '@types';
 import { UseGestureProps } from './useGesture';
 
 type Shape = keyof typeof shapes;
 
+export const PaintMode = {
+  PAINT: 'paint',
+  PLACE: 'place'
+} as const;
+
+export type PaintMode = (typeof PaintMode)[keyof typeof PaintMode];
+
 export type UseShapeBrushProps = {
-  brushMode: BrushMode;
+  paintMode: PaintMode;
   brushPath: SharedValue<SkPath>;
   setBrushPathProps: (props: Partial<SkiaPathProps>) => void;
   shapeId?: Shape;
+  brushSize?: number;
 };
 
 export type UseShapeBrushResult = UseGestureProps;
@@ -34,42 +47,37 @@ const log = createLogger('useShapeBrush');
  */
 export const useShapeBrush = ({
   brushPath,
-  brushMode,
+  brushSize = 12,
+  paintMode = PaintMode.PLACE,
   setBrushPathProps,
-  shapeId = 'bluesky'
+  shapeId = 'circle'
 }: UseShapeBrushProps) => {
   const rect = useSharedValue<Rect2>({ x: 0, y: 0, width: 0, height: 0 });
   const startPosition = useSharedValue<Vector2>({ x: 0, y: 0 });
   const shapeFeature = useSharedValue<BrushFeature | undefined>(undefined);
   const { screenToWorldPoints } = useStore();
   const brushColor = useStoreState().use.brushColor();
-  const brushColorRef = useRef<string>(brushColor);
+  const brushOperation = useStoreState().use.brushOperation();
   const points = useSharedValue<Position[]>([]);
-  const brushModeRef = useRef<BrushMode>(brushMode);
   const applyAction = useStoreState().use.applyAction();
 
-  const isPainting = false;
+  const brushColorSV = useDerivedValue(() => brushColor);
+  const brushOperationSV = useDerivedValue(() => brushOperation);
 
-  useEffect(() => {
-    // infuriating - the brushMode prop does not make it
-    // to the generateConcaveHull callback - even with a dep set
-    // so we have to use a ref to update the brushMode
-    brushModeRef.current = brushMode;
-    brushColorRef.current = brushColor;
-  }, [brushMode, brushColor]);
-
+  // create the brush feature from the shape
   const initShapeFeature = useCallback(() => {
     const shape = shapes[shapeId];
     shapeFeature.value = svgPathToBrushFeature({
       path: shape.path,
-      properties: { color: brushColor }
+      properties: { color: brushColorSV.value },
+      divisions: 24
     });
-  }, [shapeId, brushColor]);
+  }, [shapeId]);
 
   const applyShape = useCallback(() => {
     let applyPoints = points.value;
 
-    if (isPainting) {
+    if (paintMode === PaintMode.PAINT) {
       applyPoints = generateConcaveHull({
         points: applyPoints,
         concavity: 3,
@@ -80,12 +88,15 @@ export const useShapeBrush = ({
       });
     }
 
+    log.debug('[applyShape] applyPoints', brushColorSV.value);
+
     const feature = createBrushFeature({
       points: applyPoints,
       isLocal: false,
-      properties: { color: brushColorRef.current }
+      properties: { color: brushColorSV.value }
     });
 
+    // translate the feature coordinates from screen to world
     const featurePoints = feature.geometry.coordinates[0] as Position[];
     const worldPoints = screenToWorldPoints(featurePoints);
     feature.geometry.coordinates[0] = worldPoints;
@@ -93,31 +104,28 @@ export const useShapeBrush = ({
     applyAction({
       type: ActionType.ADD_BRUSH,
       feature,
-      brushMode: brushModeRef.current,
+      brushOperation: brushOperationSV.value,
       options: { updateBBox: true }
     });
-  }, [screenToWorldPoints, applyAction]);
+
+    points.value = [];
+  }, [screenToWorldPoints, applyAction, paintMode]);
 
   const start = useCallback(({ x, y }: Vector2) => {
     'worklet';
 
     runOnJS(initShapeFeature)();
 
-    brushPath.modify((p) => {
-      p.reset();
-      return p;
-    });
+    const style = paintMode === PaintMode.PAINT ? 'fill' : 'stroke';
+    const strokeWidth = paintMode === PaintMode.PAINT ? 0 : 2;
 
     runOnJS(setBrushPathProps)({
-      color: 'lightblue',
-      style: 'stroke',
-      strokeWidth: 2
+      color: brushColorSV.value,
+      style,
+      strokeWidth
     });
 
     startPosition.value = { x, y };
-    // rect.value = { x, y, width: 1, height: 1 };
-
-    runOnJS(log.debug)('[start]');
   }, []);
   const update = useCallback(({ x, y }: Vector2) => {
     'worklet';
@@ -159,11 +167,14 @@ export const useShapeBrush = ({
       const shapeWidth = shapeBbox[2] - shapeBbox[0];
       const shapeHeight = shapeBbox[3] - shapeBbox[1];
 
+      const scaleX = rectWidth / shapeWidth;
+      const scaleY = rectHeight / shapeHeight;
+
       for (let ii = 0; ii < shapePoints.length; ii++) {
         let [px, py] = shapePoints[ii];
 
-        px *= rectWidth / shapeWidth;
-        py *= rectHeight / shapeHeight;
+        px *= scaleX;
+        py *= scaleY;
 
         // translate the points to the rect position and scale them so that the fit the rect
         px += rectX;
@@ -187,6 +198,52 @@ export const useShapeBrush = ({
     points.value = [...points.value, points.value[0]];
   }, []);
 
+  const updatePaint = useCallback(({ x, y }: Vector2) => {
+    'worklet';
+
+    const rectX = x - brushSize / 2;
+    const rectY = y - brushSize / 2;
+    const rectWidth = brushSize;
+    const rectHeight = brushSize;
+
+    const shapeBbox = shapeFeature.value?.bbox ?? [0, 0, 0, 0];
+    const shapeWidth = shapeBbox[2] - shapeBbox[0];
+    const shapeHeight = shapeBbox[3] - shapeBbox[1];
+
+    const scaleX = rectWidth / shapeWidth;
+    const scaleY = rectHeight / shapeHeight;
+
+    brushPath.modify((p) => {
+      const shapePoints =
+        (shapeFeature.value?.geometry.coordinates[0] as Position[]) ?? [];
+
+      for (let ii = 0; ii < shapePoints.length; ii++) {
+        let [px, py] = shapePoints[ii];
+
+        px *= scaleX;
+        py *= scaleY;
+
+        // translate the points to the rect position and scale them so that the fit the rect
+        px += rectX;
+        py += rectY;
+
+        points.value = [...points.value, [px, py]];
+
+        p.addCircle(px, py, 1);
+      }
+
+      return p;
+    });
+
+    // points.value = [...points.value, [x, y]];
+  }, []);
+
+  // const addPoint = useCallback(({ x, y }: Vector2) => {
+  //   'worklet';
+
+  //   points.value = [...points.value, [x, y]];
+  // }, []);
+
   const end = useCallback(() => {
     'worklet';
 
@@ -198,5 +255,9 @@ export const useShapeBrush = ({
     runOnJS(applyShape)();
   }, []);
 
-  return { onStart: start, onUpdate: update, onEnd: end };
+  return {
+    onStart: start,
+    onUpdate: paintMode === PaintMode.PAINT ? updatePaint : update,
+    onEnd: end
+  };
 };

@@ -37,7 +37,7 @@ export const createBrushFeature = ({
   const properties = {
     position: center,
     isLocal,
-    color: '#444',
+    color: '#0061fd',
     ...additionalProperties
   };
 
@@ -100,7 +100,7 @@ export type SvgPathToBrushFeatureProps = {
  */
 export const svgPathToBrushFeature = ({
   path,
-  divisions = 32,
+  divisions = 48,
   properties
 }: SvgPathToBrushFeatureProps): BrushFeature | undefined => {
   const skPath = Skia.Path.MakeFromSVGString(path);

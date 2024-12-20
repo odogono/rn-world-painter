@@ -9,7 +9,7 @@ import { featureGeometryToLocal } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { simplify } from '@helpers/simplify';
 import { createBrushFeature } from '@model/brushFeature';
-import { ActionType, BrushMode } from '@model/types';
+import { ActionType, BrushOperation } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
 import { Position, Vector2 } from '@types';
 import { UseGestureProps } from './useGesture';
@@ -17,7 +17,7 @@ import { UseGestureProps } from './useGesture';
 const log = createLogger('usePointBrush');
 
 export type UsePointBrushProps = {
-  brushMode: BrushMode;
+  brushOperation: BrushOperation;
   brushPath: SharedValue<SkPath>;
 };
 
@@ -25,11 +25,11 @@ export type UsePointBrushResult = UseGestureProps;
 
 export const usePointBrush = ({
   brushPath,
-  brushMode = BrushMode.ADD
+  brushOperation = BrushOperation.ADD
 }: UsePointBrushProps): UsePointBrushResult => {
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<Position[]>([]);
-  const brushModeRef = useRef<BrushMode>(brushMode);
+  const brushOperationRef = useRef<BrushOperation>(brushOperation);
   const getBrushColor = useStoreState().use.getBrushColor();
 
   // const rlog = useRemoteLogContext();
@@ -69,7 +69,7 @@ export const usePointBrush = ({
     applyAction({
       type: ActionType.ADD_BRUSH,
       feature,
-      brushMode: brushModeRef.current,
+      brushOperation: brushOperationRef.current,
       options: { updateBBox: true }
     });
 
@@ -77,11 +77,11 @@ export const usePointBrush = ({
   }, []);
 
   useEffect(() => {
-    // infuriating - the brushMode prop does not make it
+    // infuriating - the brushOperation prop does not make it
     // to the generateConcaveHull callback - even with a dep set
-    // so we have to use a ref to update the brushMode
-    brushModeRef.current = brushMode;
-  }, [brushMode]);
+    // so we have to use a ref to update the brushOperation
+    brushOperationRef.current = brushOperation;
+  }, [brushOperation]);
 
   const addPoint = useCallback(({ x, y }: Vector2) => {
     'worklet';

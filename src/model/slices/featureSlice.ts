@@ -3,7 +3,7 @@ import { StateCreator } from 'zustand';
 import { createLogger } from '@helpers/log';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
-import { Action, ActionType, BrushMode } from '../types';
+import { Action, ActionType, BrushOperation } from '../types';
 import {
   applyAction,
   applyActionInternal,
@@ -17,7 +17,7 @@ export type FeatureSliceProps = {
   selectedFeatures: string[];
   undoStack: Action[];
   redoStack: Action[];
-  brushMode: BrushMode;
+  brushOperation: BrushOperation;
   brushColor: string;
 };
 
@@ -27,13 +27,13 @@ const defaultState: FeatureSliceProps = {
   selectedFeatures: [],
   undoStack: [],
   redoStack: [],
-  brushMode: BrushMode.ADD,
-  brushColor: '#5c5c5c'
+  brushOperation: BrushOperation.ADD,
+  brushColor: '#0061fd'
 };
 
 export type FeatureSliceActions = {
-  setBrushMode: (brushMode: BrushMode) => void;
-  getBrushMode: () => BrushMode;
+  setBrushOperation: (brushOperation: BrushOperation) => void;
+  getBrushOperation: () => BrushOperation;
   setBrushColor: (color: string) => void;
   getBrushColor: () => string;
 
@@ -49,7 +49,10 @@ export type FeatureSliceActions = {
   clearSelectedFeatures: () => void;
 
   // adds without undo/redo
-  addFeatureImmediate: (feature: BrushFeature, brushMode: BrushMode) => void;
+  addFeatureImmediate: (
+    feature: BrushFeature,
+    brushOperation: BrushOperation
+  ) => void;
 
   // removes without undo/redo
   removeFeatureImmediate: (feature: BrushFeature) => void;
@@ -70,10 +73,10 @@ export const createFeatureSlice: StateCreator<
 > = (set, get) => ({
   ...defaultState,
 
-  setBrushMode: (brushMode: BrushMode) =>
-    set((state) => ({ ...state, brushMode })),
+  setBrushOperation: (brushOperation: BrushOperation) =>
+    set((state) => ({ ...state, brushOperation })),
 
-  getBrushMode: () => get().brushMode,
+  getBrushOperation: () => get().brushOperation,
 
   setBrushColor: (color: string) =>
     set((state) =>
@@ -125,13 +128,13 @@ export const createFeatureSlice: StateCreator<
   // adds without undo/redo
   addFeatureImmediate: (
     feature: BrushFeature,
-    brushMode: BrushMode = BrushMode.ADD
+    brushOperation: BrushOperation = BrushOperation.ADD
   ) =>
     set((state) =>
       applyActionInternal(state, {
         type: ActionType.ADD_BRUSH,
         feature,
-        brushMode
+        brushOperation
       })
     ),
 

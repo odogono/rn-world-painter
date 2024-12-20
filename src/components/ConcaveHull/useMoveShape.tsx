@@ -46,17 +46,17 @@ export const useMoveShape = (): UseMoveResult => {
   const removeFeatureImmediate = useStoreState().use.removeFeatureImmediate();
 
   const applyAction = useStoreState().use.applyAction();
-  const brushMode = useStoreSelector((state) => state.brushMode);
-  const brushModeRef = useRef(brushMode);
+  const brushOperation = useStoreSelector((state) => state.brushOperation);
+  const brushOperationRef = useRef(brushOperation);
 
   const isMoveShapeEnabled =
     selectedFeature !== undefined || selectedFeatureRef.current !== undefined;
 
-  // again, the brushMode value does not propogate to the unMountMoveShape
+  // again, the brushOperation value does not propogate to the unMountMoveShape
   // callback, so we have to store it in a ref
   useEffect(() => {
-    brushModeRef.current = brushMode;
-  }, [brushMode]);
+    brushOperationRef.current = brushOperation;
+  }, [brushOperation]);
 
   const mountMoveShape = useCallback(
     ({ x, y }: Vector2) => {
@@ -99,7 +99,7 @@ export const useMoveShape = (): UseMoveResult => {
 
     applyAction({
       type: ActionType.MOVE_BRUSH,
-      brushMode: brushModeRef.current,
+      brushOperation: brushOperationRef.current,
       feature: copyBrushFeature(selectedFeatureRef.current),
       translation: { x: worldPoint.x, y: worldPoint.y },
       options: {
