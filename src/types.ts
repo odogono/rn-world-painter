@@ -1,3 +1,4 @@
+import { PathProps, SkiaDefaultProps } from '@shopify/react-native-skia';
 import type { Feature, Polygon } from 'geojson';
 import { makeMutable } from 'react-native-reanimated';
 
@@ -36,3 +37,5 @@ export type LayoutInsets = {
   top: number;
   bottom: number;
 };
+
+export type SkiaPathProps = SkiaDefaultProps<PathProps, 'start' | 'end'>;

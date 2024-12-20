@@ -8,8 +8,9 @@ import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 const log = createLogger('useMenu');
 
 export const useMenu = () => {
-  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(true);
+  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [isBrushPaletteOpen, setIsBrushPaletteOpen] = useState(false);
 
   const setBrushMode = useStoreState().use.setBrushMode();
   const brushMode = useStoreState().use.getBrushMode()();
@@ -38,13 +39,13 @@ export const useMenu = () => {
       case 'reset':
         zoomOnPoint({ toScale: 1 });
         break;
-      case 'brushAdd':
+      case 'brushModeAdd':
         setBrushMode(BrushMode.ADD);
         break;
-      case 'brushRemove':
+      case 'brushModeRemove':
         setBrushMode(BrushMode.SUBTRACT);
         break;
-      case 'brushIntersect':
+      case 'brushModeIntersect':
         setBrushMode(BrushMode.INTERSECT);
         break;
       case 'brushDelete':
@@ -52,6 +53,9 @@ export const useMenu = () => {
         break;
       case 'palette':
         setIsPaletteOpen(true);
+        break;
+      case 'brush':
+        setIsBrushPaletteOpen(true);
         break;
       case 'undo':
         undo();
@@ -81,6 +85,8 @@ export const useMenu = () => {
     isWorldMoveEnabled,
     brushMode,
     isPaletteOpen,
-    setIsPaletteOpen
+    setIsPaletteOpen,
+    isBrushPaletteOpen,
+    setIsBrushPaletteOpen
   };
 };

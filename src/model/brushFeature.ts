@@ -1,3 +1,4 @@
+import { Skia } from '@shopify/react-native-skia';
 import { Position as GeoJsonPosition, Polygon } from 'geojson';
 
 import { getBBoxCenter } from '@helpers/geo';
@@ -83,4 +84,44 @@ export const translateAbsoluteBrushFeature = (
 
 export const copyBrushFeature = (feature: BrushFeature) => {
   return JSON.parse(JSON.stringify(feature));
+};
+
+export type SvgPathToBrushFeatureProps = {
+  path: string;
+  divisions?: number;
+  properties?: Partial<BrushFeature['properties']>;
+};
+
+/**
+ * Converts a svg path to a brush feature
+ * @param path
+ * @param divisions
+ * @returns
+ */
+export const svgPathToBrushFeature = ({
+  path,
+  divisions = 32,
+  properties
+}: SvgPathToBrushFeatureProps): BrushFeature | undefined => {
+  const skPath = Skia.Path.MakeFromSVGString(path);
+  if (!skPath) return undefined;
+  const it = Skia.ContourMeasureIter(skPath, false, 1);
+  const contour = it.next();
+  const totalLength = contour?.length() ?? 0;
+
+  const polyline: Position[] = [];
+
+  for (let ii = 0; ii < divisions; ii++) {
+    const t = ii / divisions;
+    const [pos] = contour?.getPosTan(t * totalLength) ?? [{ x: 0, y: 0 }];
+
+    polyline.push([pos.x, pos.y] as Position);
+  }
+
+  const feature = createBrushFeature({
+    ...properties,
+    points: polyline
+  });
+
+  return feature;
 };

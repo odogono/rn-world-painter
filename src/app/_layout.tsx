@@ -6,11 +6,14 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import 'react-native-reanimated';
 
-import { Platform } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 import * as Font from 'expo-font';
 
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { createLogger } from '@helpers/log';
+
+const log = createLogger('App');
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -18,27 +21,27 @@ SplashScreen.preventAutoHideAsync();
 export default () => {
   const [areFontsLoaded, setAreFontsLoaded] = useState(false);
 
+  // const [areFontsLoaded, error] = useFonts({
+  //   MaterialIcons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
+  //   MaterialCommunityIcons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf')
+  // });
+
+  // console.log('areFontsLoaded', areFontsLoaded);
+  // console.log('error', error);
+
   useEffect(() => {
     const loadFonts = async () => {
       try {
         await Font.loadAsync(MaterialIcons.font);
         await Font.loadAsync(MaterialCommunityIcons.font);
-        console.log('fonts loaded');
+        log.info('fonts loaded');
         setAreFontsLoaded(true);
       } catch (error) {
-        console.error('Error loading fonts:', error);
+        log.error('Error loading fonts:', error);
       }
     };
     loadFonts();
   }, []);
-
-  // const [fontsLoaded, error] = useFonts({
-  //   ...MaterialIcons.font,
-  //   ...MaterialCommunityIcons.font
-  // });
-
-  // console.log('fonts loaded', fontsLoaded);
-  // console.log('fonts error', error);
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -48,8 +51,16 @@ export default () => {
   }, [areFontsLoaded]);
 
   if (!areFontsLoaded) {
-    return null;
+    return <AppLoading />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
+};
+
+const AppLoading = () => {
+  return (
+    <View>
+      <Text>Loading...</Text>
+    </View>
+  );
 };

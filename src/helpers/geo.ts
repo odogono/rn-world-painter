@@ -1,7 +1,9 @@
 import { LayoutRectangle } from 'react-native';
 
+import Concaveman from 'concaveman';
 import { Position as GeoJSONPosition } from 'geojson';
 
+import { simplify as simplifyPoints } from '@helpers/simplify';
 import { bbox as calculateBbox } from '@turf/bbox';
 import { BBox, BrushFeature, Position, Vector2 } from '@types';
 import { createLogger } from './log';
@@ -143,4 +145,33 @@ export const featureGeometryToLocal = (feature: BrushFeature) => {
     properties,
     geometry
   };
+};
+
+export type GenerateConcaveHullProps = {
+  points: Position[];
+  concavity?: number;
+  minArea?: number;
+  simplify?: boolean;
+  simplifyTolerance?: number;
+  simplifyHighQuality?: boolean;
+};
+
+/**
+ * Generates a concave hull from the points
+ *
+ * @param points
+ * @returns
+ */
+export const generateConcaveHull = ({
+  points,
+  concavity = 3,
+  minArea = 20,
+  simplify = false,
+  simplifyTolerance = 6,
+  simplifyHighQuality = true
+}: GenerateConcaveHullProps) => {
+  const outcome = Concaveman(points, concavity, minArea) as Position[];
+  return simplify
+    ? simplifyPoints(outcome, simplifyTolerance, simplifyHighQuality)
+    : outcome;
 };

@@ -1,11 +1,22 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Canvas, Group, Path, useCanvasRef } from '@shopify/react-native-skia';
+import {
+  Canvas,
+  Group,
+  Path,
+  Skia,
+  useCanvasRef
+} from '@shopify/react-native-skia';
 import { useContextBridge } from 'its-fine';
 import { GestureDetector } from 'react-native-gesture-handler';
-import { useAnimatedReaction } from 'react-native-reanimated';
+import {
+  useAnimatedReaction,
+  useDerivedValue,
+  useSharedValue
+} from 'react-native-reanimated';
 
+import shapes from '@assets/shapes.json';
 import {
   Debug,
   formatBBox,
@@ -25,7 +36,8 @@ import {
   useStoreState,
   useStoreViewLayout
 } from '@model/useStore';
-import { BBox, BrushFeature, Vector2 } from '@types';
+import { BBox, BrushFeature, SkiaPathProps, Vector2 } from '@types';
+import { BrushBottomSheet } from '../BrushBottomSheet';
 import { MiniMap } from './MiniMap';
 import { ShapeComponent } from './ShapeComponent';
 import { ShapeRenderer } from './ShapeRenderer';
@@ -34,6 +46,7 @@ import { useMenu } from './useMenu';
 import { useMoveShape } from './useMoveShape';
 import { useMoveView } from './useMoveView';
 import { usePointBrush } from './usePointBrush';
+import { useShapeBrush } from './useShapeBrush';
 
 const log = createLogger('Painter');
 
@@ -41,12 +54,19 @@ export const Painter = () => {
   const ContextBridge = useContextBridge();
   const canvasRef = useCanvasRef();
 
+  const brushPath = useSharedValue(Skia.Path.Make());
+  const [brushPathProps, setBrushPathProps] = useState<Partial<SkiaPathProps>>({
+    color: 'lightgreen'
+  });
+
   const {
     MenuProvider,
     isWorldMoveEnabled,
     brushMode,
     isPaletteOpen,
-    setIsPaletteOpen
+    setIsPaletteOpen,
+    isBrushPaletteOpen,
+    setIsBrushPaletteOpen
   } = useMenu();
 
   const setViewLayout = useStoreSetViewLayout();
@@ -67,7 +87,12 @@ export const Painter = () => {
     ]
   );
 
-  const { brushPath, ...brushHandlers } = usePointBrush({ brushMode });
+  const shapeHandlers = useShapeBrush({
+    brushMode,
+    brushPath,
+    setBrushPathProps
+  });
+  // const brushHandlers = usePointBrush({ brushMode, brushPath });
   const { isMoveShapeEnabled, moveShape, moveShapeMatrix, ...moveHandlers } =
     useMoveShape();
   const moveViewHandlers = useMoveView();
@@ -76,7 +101,7 @@ export const Painter = () => {
     ? moveHandlers
     : isWorldMoveEnabled
       ? moveViewHandlers
-      : brushHandlers;
+      : shapeHandlers;
 
   const handleTap = useStoreState().use.handleTap();
   const pan = useGesture({
@@ -89,6 +114,11 @@ export const Painter = () => {
     log.debug('handleSelectColor', color);
     setIsPaletteOpen(false);
     setBrushColor(color);
+  }, []);
+
+  const handleSelectBrush = useCallback((brush: string) => {
+    log.debug('handleSelectBrush', brush);
+    setIsBrushPaletteOpen(false);
   }, []);
 
   // starting features
@@ -137,6 +167,32 @@ export const Painter = () => {
   //   pan
   // });
 
+  // const svgPath = useDerivedValue(() => {
+  //   const path = Skia.Path.MakeFromSVGString(shapes.circle.path);
+  //   if (!path) return null;
+  //   const it = Skia.ContourMeasureIter(path, false, 1);
+  //   const contour = it.next();
+  //   const totalLength = contour?.length() ?? 0;
+
+  //   const polyLinePath = Skia.Path.Make();
+
+  //   const divisions = 64;
+  //   for (let ii = 0; ii < divisions; ii++) {
+  //     const t = ii / divisions;
+  //     const [pos] = contour?.getPosTan(t * totalLength);
+
+  //     if (ii === 0) {
+  //       polyLinePath.moveTo(pos.x, pos.y);
+  //     } else {
+  //       polyLinePath.lineTo(pos.x, pos.y);
+  //     }
+  //   }
+
+  //   polyLinePath.close();
+
+  //   return polyLinePath;
+  // });
+
   return (
     <View style={styles.container}>
       <MenuProvider>
@@ -156,7 +212,17 @@ export const Painter = () => {
 
               <MiniMap />
 
-              <Path path={brushPath} color='black' />
+              <Path path={brushPath} {...brushPathProps} />
+
+              {/* <Group
+                transform={[
+                  { translateX: 100 },
+                  { translateY: 100 },
+                  { scale: 2 }
+                ]}
+              >
+                <Path path={svgPath} color='lightblue' />
+              </Group> */}
 
               {moveShape && (
                 <Group matrix={moveShapeMatrix}>
@@ -171,15 +237,19 @@ export const Painter = () => {
           viewLayout={viewLayout}
           editNodeIsActive={!isWorldMoveEnabled}
           panNodeIsActive={isWorldMoveEnabled}
-          brushAddNodeIsActive={brushMode === BrushMode.ADD}
-          brushRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
-          brushIntersectNodeIsActive={brushMode === BrushMode.INTERSECT}
+          brushModeAddNodeIsActive={brushMode === BrushMode.ADD}
+          brushModeRemoveNodeIsActive={brushMode === BrushMode.SUBTRACT}
+          brushModeIntersectNodeIsActive={brushMode === BrushMode.INTERSECT}
           paletteNodeColor={brushColor}
         />
 
         <PaletteBottomSheet
           isOpen={isPaletteOpen}
           onColorSelected={handleSelectColor}
+        />
+        <BrushBottomSheet
+          isOpen={isBrushPaletteOpen}
+          onBrushSelected={handleSelectBrush}
         />
         <Debug />
       </MenuProvider>

@@ -2,12 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { SkPath, Skia } from '@shopify/react-native-skia';
 import Concaveman from 'concaveman';
-import {
-  SharedValue,
-  runOnJS,
-  runOnUI,
-  useSharedValue
-} from 'react-native-reanimated';
+import { SharedValue, runOnJS, useSharedValue } from 'react-native-reanimated';
 
 import { useRemoteLogContext } from '@contexts/RemoteLogContext';
 import { featureGeometryToLocal } from '@helpers/geo';
@@ -16,23 +11,22 @@ import { simplify } from '@helpers/simplify';
 import { createBrushFeature } from '@model/brushFeature';
 import { ActionType, BrushMode } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
-import { BrushFeature, Position, Vector2 } from '@types';
+import { Position, Vector2 } from '@types';
 import { UseGestureProps } from './useGesture';
 
 const log = createLogger('usePointBrush');
 
 export type UsePointBrushProps = {
   brushMode: BrushMode;
-};
-
-export type UsePointBrushResult = UseGestureProps & {
   brushPath: SharedValue<SkPath>;
 };
 
+export type UsePointBrushResult = UseGestureProps;
+
 export const usePointBrush = ({
+  brushPath,
   brushMode = BrushMode.ADD
 }: UsePointBrushProps): UsePointBrushResult => {
-  const brushPath = useSharedValue(Skia.Path.Make());
   const addTime = useSharedValue(Date.now());
   const points = useSharedValue<Position[]>([]);
   const brushModeRef = useRef<BrushMode>(brushMode);
@@ -131,5 +125,5 @@ export const usePointBrush = ({
     points.value = [];
   }, []);
 
-  return { brushPath, onStart: addPoint, onUpdate: addPoint, onEnd };
+  return { onStart: addPoint, onUpdate: addPoint, onEnd };
 };
