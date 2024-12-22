@@ -38,7 +38,7 @@ const defaultState: FeatureSliceProps = {
   redoStack: [],
   brushOperation: BrushOperation.ADD,
   brushColor: '#0061fd',
-  brushSize: 12,
+  brushSize: 10,
   brushShape: 'circle',
   brushMode: PaintMode.PAINT
 };
@@ -48,7 +48,9 @@ export type FeatureSliceActions = {
   getBrushOperation: () => BrushOperation;
   setBrushColor: (color: string) => void;
   getBrushColor: () => string;
-
+  setBrushShape: (shape: ShapeTemplate) => void;
+  setBrushSize: (size: number) => void;
+  setBrushMode: (mode: PaintMode) => void;
   applyAction: (action: Action) => void;
   // addFeature: (feature: BrushFeature, options?: AddFeatureOptions) => void;
   removeFeature: (feature: BrushFeature) => void;
@@ -95,6 +97,15 @@ export const createFeatureSlice: StateCreator<
       // applyAction(state, { type: ActionType.SET_BRUSH_COLOR, color })
       ({ ...state, brushColor: color })
     ),
+
+  setBrushShape: (shape: ShapeTemplate) =>
+    set((state) => ({ ...state, brushShape: shape })),
+
+  setBrushMode: (mode: PaintMode) =>
+    set((state) => ({ ...state, brushMode: mode })),
+
+  setBrushSize: (size: number) =>
+    set((state) => ({ ...state, brushSize: size })),
 
   getBrushColor: () => get().brushColor,
 

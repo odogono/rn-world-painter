@@ -64,23 +64,23 @@ export const useShapeBrush = ({
 
   // create the brush feature from the shape
   const initShapeFeature = useCallback(() => {
-    const shape = shapes[brushShape];
+    const shape = shapes[brushShapeSV.value];
     shapeFeature.value = svgPathToBrushFeature({
       path: shape.path,
       properties: { color: brushColorSV.value },
       divisions: 24
     });
-  }, [brushShape]);
+  }, []);
 
   const applyShape = useCallback(() => {
     let applyPoints = points.value;
 
-    if (paintMode === PaintMode.PAINT) {
+    if (paintModeSV.value === PaintMode.PAINT) {
       applyPoints = generateConcaveHull({
         points: applyPoints,
         concavity: 3,
         minArea: 20,
-        simplify: true,
+        simplify: false,
         simplifyTolerance: 6,
         simplifyHighQuality: true
       });
@@ -114,8 +114,8 @@ export const useShapeBrush = ({
 
     runOnJS(initShapeFeature)();
 
-    const style = paintMode === PaintMode.PAINT ? 'fill' : 'stroke';
-    const strokeWidth = paintMode === PaintMode.PAINT ? 0 : 2;
+    const style = paintModeSV.value === PaintMode.PAINT ? 'fill' : 'stroke';
+    const strokeWidth = paintModeSV.value === PaintMode.PAINT ? 0 : 2;
 
     runOnJS(setBrushPathProps)({
       color: brushColorSV.value,
@@ -199,6 +199,8 @@ export const useShapeBrush = ({
   const updatePaint = useCallback(({ x, y }: Vector2) => {
     'worklet';
 
+    const brushSize = brushSizeSV.value;
+
     const rectX = x - brushSize / 2;
     const rectY = y - brushSize / 2;
     const rectWidth = brushSize;
@@ -255,7 +257,7 @@ export const useShapeBrush = ({
 
   return {
     onStart: start,
-    onUpdate: paintMode === PaintMode.PAINT ? updatePaint : update,
+    onUpdate: paintModeSV.value === PaintMode.PAINT ? updatePaint : update,
     onEnd: end
   };
 };

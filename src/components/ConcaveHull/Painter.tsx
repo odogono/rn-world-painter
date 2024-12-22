@@ -122,6 +122,12 @@ export const Painter = () => {
     setIsBrushPaletteOpen(false);
   }, []);
 
+  useEffect(() => {
+    setTimeout(() => {
+      setIsBrushPaletteOpen(true);
+    }, 1000);
+  }, []);
+
   // starting features
   useEffect(() => {
     applyAction({

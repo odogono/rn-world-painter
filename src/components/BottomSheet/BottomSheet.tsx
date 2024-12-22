@@ -30,8 +30,6 @@ export const BottomSheet = ({
   const ref = useRef<GorhomBottomSheet | null>(null);
   const opacity = useSharedValue(0);
 
-  const snapPoints = useMemo(() => ['50%'], []);
-
   const handleSheetChange = useCallback(
     (index: number) => {
       if (index === -1) {
