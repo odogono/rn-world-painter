@@ -3,7 +3,13 @@ import { StateCreator } from 'zustand';
 import { createLogger } from '@helpers/log';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
-import { Action, ActionType, BrushOperation } from '../types';
+import {
+  Action,
+  ActionType,
+  BrushOperation,
+  PaintMode,
+  ShapeTemplate
+} from '../types';
 import {
   applyAction,
   applyActionInternal,
@@ -19,6 +25,9 @@ export type FeatureSliceProps = {
   redoStack: Action[];
   brushOperation: BrushOperation;
   brushColor: string;
+  brushSize: number;
+  brushShape: ShapeTemplate;
+  brushMode: PaintMode;
 };
 
 const defaultState: FeatureSliceProps = {
@@ -28,7 +37,10 @@ const defaultState: FeatureSliceProps = {
   undoStack: [],
   redoStack: [],
   brushOperation: BrushOperation.ADD,
-  brushColor: '#0061fd'
+  brushColor: '#0061fd',
+  brushSize: 12,
+  brushShape: 'circle',
+  brushMode: PaintMode.PAINT
 };
 
 export type FeatureSliceActions = {

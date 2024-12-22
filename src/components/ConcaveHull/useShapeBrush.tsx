@@ -12,26 +12,19 @@ import shapes from '@assets/shapes.json';
 import { generateConcaveHull } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { createBrushFeature, svgPathToBrushFeature } from '@model/brushFeature';
-import { ActionType, BrushOperation } from '@model/types';
+import {
+  ActionType,
+  BrushOperation,
+  PaintMode,
+  ShapeTemplate
+} from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
 import { BrushFeature, Position, Rect2, SkiaPathProps, Vector2 } from '@types';
 import { UseGestureProps } from './useGesture';
 
-type Shape = keyof typeof shapes;
-
-export const PaintMode = {
-  PAINT: 'paint',
-  PLACE: 'place'
-} as const;
-
-export type PaintMode = (typeof PaintMode)[keyof typeof PaintMode];
-
 export type UseShapeBrushProps = {
-  paintMode: PaintMode;
   brushPath: SharedValue<SkPath>;
   setBrushPathProps: (props: Partial<SkiaPathProps>) => void;
-  shapeId?: Shape;
-  brushSize?: number;
 };
 
 export type UseShapeBrushResult = UseGestureProps;
@@ -47,32 +40,37 @@ const log = createLogger('useShapeBrush');
  */
 export const useShapeBrush = ({
   brushPath,
-  brushSize = 12,
-  paintMode = PaintMode.PLACE,
-  setBrushPathProps,
-  shapeId = 'circle'
+  setBrushPathProps
 }: UseShapeBrushProps) => {
   const rect = useSharedValue<Rect2>({ x: 0, y: 0, width: 0, height: 0 });
   const startPosition = useSharedValue<Vector2>({ x: 0, y: 0 });
   const shapeFeature = useSharedValue<BrushFeature | undefined>(undefined);
   const { screenToWorldPoints } = useStore();
+
   const brushColor = useStoreState().use.brushColor();
   const brushOperation = useStoreState().use.brushOperation();
+  const brushShape = useStoreState().use.brushShape();
+  const brushSize = useStoreState().use.brushSize();
+  const paintMode = useStoreState().use.brushMode();
+
   const points = useSharedValue<Position[]>([]);
   const applyAction = useStoreState().use.applyAction();
 
   const brushColorSV = useDerivedValue(() => brushColor);
   const brushOperationSV = useDerivedValue(() => brushOperation);
+  const brushShapeSV = useDerivedValue(() => brushShape);
+  const brushSizeSV = useDerivedValue(() => brushSize);
+  const paintModeSV = useDerivedValue(() => paintMode);
 
   // create the brush feature from the shape
   const initShapeFeature = useCallback(() => {
-    const shape = shapes[shapeId];
+    const shape = shapes[brushShape];
     shapeFeature.value = svgPathToBrushFeature({
       path: shape.path,
       properties: { color: brushColorSV.value },
       divisions: 24
     });
-  }, [shapeId]);
+  }, [brushShape]);
 
   const applyShape = useCallback(() => {
     let applyPoints = points.value;
@@ -82,7 +80,7 @@ export const useShapeBrush = ({
         points: applyPoints,
         concavity: 3,
         minArea: 20,
-        simplify: false,
+        simplify: true,
         simplifyTolerance: 6,
         simplifyHighQuality: true
       });

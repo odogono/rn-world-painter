@@ -6,7 +6,7 @@ import {
   MoveBrushAction,
   RemoveBrushAction,
   SetBrushColorAction
-} from '../types';
+} from '@model/types';
 import { addFeature, moveFeature, removeFeatures } from './featureHelpers';
 import { FeatureSlice } from './featureSlice';
 

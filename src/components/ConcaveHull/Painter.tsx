@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
+  Blur,
   Canvas,
+  ColorMatrix,
   Group,
+  Paint,
   Path,
   Skia,
   useCanvasRef
@@ -16,7 +19,6 @@ import {
   useSharedValue
 } from 'react-native-reanimated';
 
-import shapes from '@assets/shapes.json';
 import {
   Debug,
   formatBBox,
@@ -46,7 +48,7 @@ import { useMenu } from './useMenu';
 import { useMoveShape } from './useMoveShape';
 import { useMoveView } from './useMoveView';
 import { usePointBrush } from './usePointBrush';
-import { PaintMode, useShapeBrush } from './useShapeBrush';
+import { useShapeBrush } from './useShapeBrush';
 
 const log = createLogger('Painter');
 
@@ -89,8 +91,7 @@ export const Painter = () => {
 
   const shapeHandlers = useShapeBrush({
     brushPath,
-    setBrushPathProps,
-    paintMode: PaintMode.PLACE
+    setBrushPathProps
   });
 
   const { isMoveShapeEnabled, moveShape, moveShapeMatrix, ...moveHandlers } =
@@ -206,7 +207,20 @@ export const Painter = () => {
             }}
           >
             <ContextBridge>
-              <Group matrix={mViewMatrix}>
+              <Group
+                matrix={mViewMatrix}
+                // layer={
+                //   <Paint>
+                //     <Blur blur={10} />
+                //     <ColorMatrix
+                //       matrix={[
+                //         1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                //         18, -7
+                //       ]}
+                //     />
+                //   </Paint>
+                // }
+              >
                 <ShapeRenderer />
               </Group>
 

@@ -1,3 +1,4 @@
+import shapes from '@assets/shapes.json';
 import { BrushFeature, Vector2 } from '@types';
 
 export const ActionType = {
@@ -58,3 +59,12 @@ export type AddFeatureOptions = {
 };
 
 export type MoveFeatureOptions = AddFeatureOptions;
+
+export type ShapeTemplate = keyof typeof shapes;
+
+export const PaintMode = {
+  PAINT: 'paint',
+  PLACE: 'place'
+} as const;
+
+export type PaintMode = (typeof PaintMode)[keyof typeof PaintMode];
