@@ -12,7 +12,7 @@ import { useStore } from '@model/useStore';
 import { Vector2 } from '@types';
 
 export type UseGestureProps = {
-  isWorldMoveEnabled?: boolean;
+  isPanViewEnabled?: boolean;
   onTap?: (point: Vector2) => void;
   onStart?: (point: Vector2) => void;
   onChange?: (point: Vector2) => void;
@@ -23,7 +23,7 @@ export type UseGestureProps = {
 const log = createLogger('useGesture');
 
 export const useGesture = ({
-  isWorldMoveEnabled = false,
+  isPanViewEnabled = false,
   onStart,
   onChange,
   onUpdate,
@@ -67,25 +67,15 @@ export const useGesture = ({
           if (onChange) {
             onChange({ x: changeX, y: changeY });
           }
-
-          // const { x, y } = mViewPosition.value;
-          // mViewPosition.modify((pos) => {
-          //   pos.x -= changeX;
-          //   pos.y -= changeY;
-          //   return pos;
-          // });
-          // mViewPosition.value = { x: x - changeX, y: y - changeY };
         })
         .onUpdate(({ x, y }) => {
           'worklet';
-          // runOnJS(log.info)('update', { x, y });
           if (onUpdate) {
             onUpdate({ x, y });
           }
         })
         .onEnd(() => {
           'worklet';
-
           if (onEnd) {
             onEnd();
           }
@@ -137,10 +127,10 @@ export const useGesture = ({
   );
 
   return useMemo(() => {
-    if (isWorldMoveEnabled) {
+    if (isPanViewEnabled) {
       return Gesture.Simultaneous(singleTap, pan, pinchGesture);
     } else {
-      return Gesture.Exclusive(singleTap, pan);
+      return Gesture.Simultaneous(singleTap, pan);
     }
-  }, [singleTap, pan, pinchGesture, isWorldMoveEnabled]);
+  }, [singleTap, pan, pinchGesture, isPanViewEnabled]);
 };

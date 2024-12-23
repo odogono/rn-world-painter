@@ -81,7 +81,7 @@ export const useShapeBrush = ({
       });
     }
 
-    log.debug('[applyShape] applyPoints', brushColorSV.value);
+    log.debug('[applyShape] applyPoints', applyPoints);
 
     const feature = createBrushFeature({
       points: applyPoints,

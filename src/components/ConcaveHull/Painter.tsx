@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -32,7 +32,6 @@ import { translateBrushFeature } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { ActionType, BrushOperation } from '@model/types';
 import {
-  useStore,
   useStoreSelector,
   useStoreSetViewLayout,
   useStoreState,
@@ -48,7 +47,6 @@ import { useGesture } from './useGesture';
 import { useMenu } from './useMenu';
 import { useMoveShape } from './useMoveShape';
 import { useMoveView } from './useMoveView';
-import { usePointBrush } from './usePointBrush';
 import { useShapeBrush } from './useShapeBrush';
 
 const log = createLogger('Painter');
@@ -100,11 +98,21 @@ export const Painter = () => {
     useMoveShape();
   const moveViewHandlers = useMoveView();
 
-  const gestureHandlers = isMoveShapeEnabled
-    ? moveHandlers
-    : isPanViewEnabled
-      ? moveViewHandlers
-      : shapeHandlers;
+  const gestureHandlers = useMemo(
+    () =>
+      isMoveShapeEnabled
+        ? moveHandlers
+        : isPanViewEnabled
+          ? moveViewHandlers
+          : shapeHandlers,
+    [
+      isMoveShapeEnabled,
+      isPanViewEnabled,
+      moveHandlers,
+      moveViewHandlers,
+      shapeHandlers
+    ]
+  );
 
   const handleTap = useStoreState().use.handleTap();
   const pan = useGesture({

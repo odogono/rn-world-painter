@@ -2,9 +2,10 @@ import { Skia } from '@shopify/react-native-skia';
 import { Position as GeoJsonPosition, Polygon } from 'geojson';
 
 import { getBBoxCenter } from '@helpers/geo';
-import { generateShortUUID, generateUUID } from '@helpers/uuid';
+import { generateShortUUID } from '@helpers/uuid';
 import { bbox as calculateBbox } from '@turf/bbox';
 import { BrushFeature, Position, Vector2 } from '@types';
+import { createLogger } from '../helpers/log';
 
 export type CreateBrushFeatureOptions = {
   id?: string;
@@ -13,6 +14,8 @@ export type CreateBrushFeatureOptions = {
   isLocal?: boolean;
   properties?: Partial<BrushFeature['properties']>;
 };
+
+const log = createLogger('createBrushFeature');
 
 export const createBrushFeature = ({
   id = generateShortUUID(),
@@ -25,6 +28,14 @@ export const createBrushFeature = ({
     type: 'Polygon',
     coordinates: coordinates ?? [points as unknown as GeoJsonPosition[]]
   };
+
+  if (!geometry) {
+    log.warn('createBrushFeature no geometry', { points, coordinates });
+  }
+
+  if (!coordinates && !points) {
+    log.warn('createBrushFeature no coordinates or points');
+  }
 
   const bbox = calculateBbox(geometry);
   const center = getBBoxCenter(bbox);
