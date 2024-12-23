@@ -3,14 +3,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Group } from '@shopify/react-native-skia';
 import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { useStoreState } from '@model/useStore';
 import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature } from '@types';
 import { setDebugMsg3, setDebugMsg4 } from '../Debug/Debug';
 import { ShapeComponent } from './ShapeComponent';
 
-const log = createLogger('ShapeRenderer');
+const log = createLog('ShapeRenderer');
 
 export const ShapeRenderer = () => {
   const visibleTileIdsRef = useRef<string>('');

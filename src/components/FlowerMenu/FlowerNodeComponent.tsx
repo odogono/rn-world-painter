@@ -6,11 +6,11 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Icon, IconName } from '@components/Icon';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { getContrastColor } from '@helpers/color';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { useFlowerMenuNode, useMenuStore } from './store/context';
 import { useFlowerNodeGestures } from './useFlowerNodeGestures';
 
-const log = createLogger('FlowerNodeComponent');
+const log = createLog('FlowerNodeComponent');
 
 export type FlowerNodeComponentProps = {
   nodeId: string;

@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { BrushOperation } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
 import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 
-const log = createLogger('useMenu');
+const log = createLog('useMenu');
 
 export const useMenu = () => {
   // const isWorldViewEnabled = useStoreState().use.panViewEnabled();

@@ -33,7 +33,7 @@ const ignorePrefixTypes = ['group', 'groupCollapsed', 'groupEnd', 'table'];
 
 export type Logger = Record<LogTypes, (...args: any[]) => void>;
 
-export const createLogger = (
+export const createLog = (
   prefix: string | null = null,
   disabled: LogTypes[] = []
 ) => {

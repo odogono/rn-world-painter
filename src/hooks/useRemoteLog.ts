@@ -3,9 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SkRect } from '@shopify/react-native-skia';
 import { Channel, Socket } from 'phoenix';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 
-const log = createLogger('useRemoteLog');
+const log = createLog('useRemoteLog');
 
 export type SendSVGPathParams = {
   name: string;

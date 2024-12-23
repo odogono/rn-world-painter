@@ -1,4 +1,4 @@
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import {
   Action,
   ActionType,
@@ -10,7 +10,7 @@ import {
 import { addFeature, moveFeature, removeFeatures } from './featureHelpers';
 import { FeatureSlice } from './featureSlice';
 
-const log = createLogger('actions');
+const log = createLog('actions');
 
 export const replayActions = (state: FeatureSlice) => {
   // clear everything

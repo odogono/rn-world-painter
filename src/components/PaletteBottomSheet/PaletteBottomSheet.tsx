@@ -4,10 +4,10 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import ColorPicker, { Panel5, returnedResults } from 'reanimated-color-picker';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { BottomSheet, BottomSheetProps } from '../BottomSheet/BottomSheet';
 
-const log = createLogger('PaletteBottomSheet');
+const log = createLog('PaletteBottomSheet');
 
 export type PaletteBottomSheetProps = BottomSheetProps & {
   onColorSelected: (selectedColor: string) => void;

@@ -2,14 +2,14 @@ import { Dimensions, LayoutRectangle } from 'react-native';
 
 import { withTiming } from 'react-native-reanimated';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { LayoutInsets, Rect2, Vector2 } from '@types';
 import { Vector2WithLayout } from '../types';
 import type { FlowerMenuStoreState } from './store';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
-const log = createLogger('FlowerMenuHelpers');
+const log = createLog('FlowerMenuHelpers');
 
 export const applyNodeState = (
   state: FlowerMenuStoreState,

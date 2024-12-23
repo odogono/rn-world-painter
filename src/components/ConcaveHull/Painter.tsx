@@ -29,7 +29,7 @@ import {
 import { FlowerMenu } from '@components/FlowerMenu/FlowerMenu';
 import { PaletteBottomSheet } from '@components/PaletteBottomSheet/PaletteBottomSheet';
 import { translateBrushFeature } from '@helpers/geo';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { ActionType, BrushOperation } from '@model/types';
 import {
   useStoreSelector,
@@ -49,7 +49,7 @@ import { useMoveShape } from './useMoveShape';
 import { useMoveView } from './useMoveView';
 import { useShapeBrush } from './useShapeBrush';
 
-const log = createLogger('Painter');
+const log = createLog('Painter');
 
 export const Painter = () => {
   const ContextBridge = useContextBridge();

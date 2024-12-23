@@ -1,11 +1,11 @@
 import { makeMutable } from 'react-native-reanimated';
 import { StateStorage, createJSONStorage, persist } from 'zustand/middleware';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { mmkvStorage } from '@model/storage';
 import { Mutable, Vector2 } from '@types';
 
-const log = createLogger('FlowerMenuPersist');
+const log = createLog('FlowerMenuPersist');
 
 export const appStorage = createJSONStorage(
   () => {

@@ -5,7 +5,7 @@ import { makeMutable, withTiming } from 'react-native-reanimated';
 import { createStore } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { LayoutInsets, Rect2, Vector2 } from '@types';
 import { Node, NodeState, Vector2WithLayout } from '../types';
 import { menuData } from './data';
@@ -24,7 +24,7 @@ import {
 } from './helpers';
 import { appStorage } from './persist';
 
-const log = createLogger('FlowerMenuStore');
+const log = createLog('FlowerMenuStore');
 
 export interface FlowerMenuStoreProps {
   nodes: Record<string, NodeState>;

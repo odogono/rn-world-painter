@@ -1,6 +1,6 @@
 import { clamp, runOnJS } from 'react-native-reanimated';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { Vector2Create } from '@helpers/vector2';
 import { Vector2 } from '@types';
 
@@ -13,7 +13,7 @@ export type CalculateZoomProps = {
   position?: Vector2;
 };
 
-const log = createLogger('calculateZoom');
+const log = createLog('calculateZoom');
 
 export const calculateZoom = ({
   // worldFocalPoint,

@@ -7,7 +7,7 @@ import {
 } from 'react-native-gesture-handler';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { useStore } from '@model/useStore';
 import { Vector2 } from '@types';
 
@@ -20,7 +20,7 @@ export type UseGestureProps = {
   onEnd?: () => void | undefined;
 };
 
-const log = createLogger('useGesture');
+const log = createLog('useGesture');
 
 export const useGesture = ({
   isPanViewEnabled = false,

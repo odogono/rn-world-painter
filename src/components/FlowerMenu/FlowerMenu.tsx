@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { LayoutRectangle, StyleSheet, View } from 'react-native';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { FlowerNodeComponent } from './FlowerNodeComponent';
 import { useMenuStore } from './store/context';
 
-const log = createLogger('FlowerMenu');
+const log = createLog('FlowerMenu');
 
 export type FlowerMenuProps = {
   viewLayout: LayoutRectangle;

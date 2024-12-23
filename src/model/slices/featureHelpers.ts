@@ -1,5 +1,5 @@
 import { calculateBBox } from '@helpers/geo';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import {
   POLYCLIP_RESULT_UNCHANGED,
   applyFeatureDifference,
@@ -16,7 +16,7 @@ import {
 } from '../types';
 import { FeatureSlice } from './featureSlice';
 
-const log = createLogger('featureHelpers');
+const log = createLog('featureHelpers');
 
 export type AddFeatureProps = {
   state: FeatureSlice;

@@ -9,7 +9,7 @@ import {
 } from 'react-native-reanimated';
 import { StateCreator } from 'zustand';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { Vector2Create, Vector2MultiplyScalar } from '@helpers/vector2';
 import { BBox, Mutable, Vector2 } from '@types';
 
@@ -58,7 +58,7 @@ const defaultState: ViewSliceProps = {
   viewLayout: { width: 0, height: 0, x: 0, y: 0 }
 };
 
-const log = createLogger('viewSlice');
+const log = createLog('viewSlice');
 
 export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (
   set,

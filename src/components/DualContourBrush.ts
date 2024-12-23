@@ -4,9 +4,9 @@ import { LayoutRectangle } from 'react-native';
 import { Canvas, Path, SkPoint, Skia } from '@shopify/react-native-skia';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 
-const log = createLogger('DualContourBrush');
+const log = createLog('DualContourBrush');
 
 type BrushPoint = {
   x: number;

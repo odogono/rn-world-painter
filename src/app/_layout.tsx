@@ -11,9 +11,9 @@ import { Platform, Text, View } from 'react-native';
 import * as Font from 'expo-font';
 
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 
-const log = createLogger('App');
+const log = createLog('App');
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

@@ -10,7 +10,7 @@ import {
   useSharedValue
 } from 'react-native-reanimated';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import {
   useStore,
   useStoreSelector,
@@ -21,7 +21,7 @@ import { useStoreActions } from '@model/useStoreActions';
 import { BBox, BrushFeature } from '@types';
 import { bboxToLayoutRectangle } from '../../helpers/geo';
 
-const log = createLogger('ShapeRenderer');
+const log = createLog('ShapeRenderer');
 
 export const MiniMap = () => {
   const viewportPath = useSharedValue(Skia.Path.Make());

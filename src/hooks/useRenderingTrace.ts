@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 
-const log = createLogger('');
+const log = createLog('');
 
 /**
  * Helps tracking the props changes made in a react functional component.

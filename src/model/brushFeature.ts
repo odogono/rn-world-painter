@@ -5,7 +5,7 @@ import { getBBoxCenter } from '@helpers/geo';
 import { generateShortUUID } from '@helpers/uuid';
 import { bbox as calculateBbox } from '@turf/bbox';
 import { BrushFeature, Position, Vector2 } from '@types';
-import { createLogger } from '../helpers/log';
+import { createLog } from '../helpers/log';
 
 export type CreateBrushFeatureOptions = {
   id?: string;
@@ -15,7 +15,7 @@ export type CreateBrushFeatureOptions = {
   properties?: Partial<BrushFeature['properties']>;
 };
 
-const log = createLogger('createBrushFeature');
+const log = createLog('createBrushFeature');
 
 export const createBrushFeature = ({
   id = generateShortUUID(),

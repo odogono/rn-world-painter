@@ -11,9 +11,9 @@ import GorhomBottomSheet, {
   BottomSheetView as GorhomBottomSheetView,
   SCREEN_WIDTH
 } from '@gorhom/bottom-sheet';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 
-const log = createLogger('BottomSheet');
+const log = createLog('BottomSheet');
 
 export type BottomSheetProps = React.PropsWithChildren & {
   isOpen?: boolean;

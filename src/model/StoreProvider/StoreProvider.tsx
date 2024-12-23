@@ -8,7 +8,7 @@ import {
 } from 'react-native-reanimated';
 import { useStore } from 'zustand';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { Position, Vector2 } from '@types';
 import { store, type Store, type StoreProps } from '../Store';
 import {
@@ -26,7 +26,7 @@ type ProviderProps = React.PropsWithChildren<
   Partial<StoreProps> & AdditionalProps
 >;
 
-const log = createLogger('StoreProvider');
+const log = createLog('StoreProvider');
 
 export const StoreProvider = ({
   children,

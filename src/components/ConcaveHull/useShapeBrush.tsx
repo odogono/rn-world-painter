@@ -10,7 +10,7 @@ import {
 
 import shapes from '@assets/shapes.json';
 import { generateConcaveHull } from '@helpers/geo';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { createBrushFeature, svgPathToBrushFeature } from '@model/brushFeature';
 import { ActionType, PaintMode } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
@@ -24,7 +24,7 @@ export type UseShapeBrushProps = {
 
 export type UseShapeBrushResult = UseGestureProps;
 
-const log = createLogger('useShapeBrush');
+const log = createLog('useShapeBrush');
 
 /**
  * Draws a selection box based on the drag position

@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { BBox, BrushFeature, Vector2 } from '@types';
 import { FeatureRBush, createSpatialIndex } from '../spatialIndex';
 import {
@@ -80,7 +80,7 @@ export type FeatureSliceActions = {
 
 export type FeatureSlice = FeatureSliceProps & FeatureSliceActions;
 
-const log = createLogger('featureSlice');
+const log = createLog('featureSlice');
 
 export const createFeatureSlice: StateCreator<
   FeatureSlice,

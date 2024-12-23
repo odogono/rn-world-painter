@@ -1,11 +1,11 @@
 import * as polyclip from 'polyclip-ts';
 import { Geom } from 'polyclip-ts';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { BrushFeature } from '@types';
 import { createBrushFeature } from '../model/brushFeature';
 
-const log = createLogger('polyclip');
+const log = createLog('polyclip');
 
 export const POLYCLIP_RESULT_REMOVED = -1;
 export const POLYCLIP_RESULT_UNCHANGED = 0;

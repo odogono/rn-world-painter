@@ -14,12 +14,12 @@ import { useDerivedValue } from 'react-native-reanimated';
 
 import shapes from '@assets/shapes.json';
 import { Icon } from '@components/Icon';
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import { PaintMode, ShapeTemplate } from '@model/types';
 import { useStoreState } from '@model/useStore';
 import { BottomSheet, BottomSheetProps } from './BottomSheet/BottomSheet';
 
-const log = createLogger('BrushBottomSheet');
+const log = createLog('BrushBottomSheet');
 
 export type BrushBottomSheetProps = BottomSheetProps & {
   onBrushSelected: (selectedBrush: string) => void;

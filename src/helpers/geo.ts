@@ -6,12 +6,12 @@ import { Position as GeoJSONPosition } from 'geojson';
 import { simplify as simplifyPoints } from '@helpers/simplify';
 import { bbox as calculateBbox } from '@turf/bbox';
 import { BBox, BrushFeature, Position, Vector2 } from '@types';
-import { createLogger } from './log';
+import { createLog } from './log';
 import { generateUUID } from './uuid';
 
 export { bbox as calculateBBox } from '@turf/bbox';
 
-const log = createLogger('geo');
+const log = createLog('geo');
 
 type AdditionalProperties = Partial<BrushFeature['properties']> & {
   id?: string;

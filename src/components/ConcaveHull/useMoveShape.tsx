@@ -9,7 +9,7 @@ import {
   useSharedValue
 } from 'react-native-reanimated';
 
-import { createLogger } from '@helpers/log';
+import { createLog } from '@helpers/log';
 import {
   copyBrushFeature,
   translateAbsoluteBrushFeature
@@ -25,7 +25,7 @@ export type UseMoveResult = UseGestureProps & {
   isMoveShapeEnabled: boolean;
 };
 
-const log = createLogger('useMove');
+const log = createLog('useMove');
 
 export const useMoveShape = (): UseMoveResult => {
   const moveShapeMatrix = useSharedValue(Skia.Matrix());
