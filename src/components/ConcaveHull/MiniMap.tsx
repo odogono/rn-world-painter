@@ -79,7 +79,7 @@ export const MiniMap = () => {
           <ShapeComponent key={shape.id} shape={shape} />
         ))}
       </Group>
-      <Guidelines viewLayout={viewLayout} />
+      {/* <Guidelines viewLayout={viewLayout} /> */}
     </>
   );
 };

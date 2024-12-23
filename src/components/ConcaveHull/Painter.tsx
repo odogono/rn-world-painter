@@ -40,6 +40,7 @@ import {
 } from '@model/useStore';
 import { BBox, BrushFeature, SkiaPathProps, Vector2 } from '@types';
 import { BrushBottomSheet } from '../BrushBottomSheet';
+import { GridComponent } from './GridComponent';
 import { MiniMap } from './MiniMap';
 import { ShapeComponent } from './ShapeComponent';
 import { ShapeRenderer } from './ShapeRenderer';
@@ -120,12 +121,6 @@ export const Painter = () => {
   const handleSelectBrush = useCallback((brush: string) => {
     log.debug('handleSelectBrush', brush);
     setIsBrushPaletteOpen(false);
-  }, []);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setIsBrushPaletteOpen(true);
-    }, 1000);
   }, []);
 
   // starting features
@@ -227,22 +222,13 @@ export const Painter = () => {
                 //   </Paint>
                 // }
               >
+                <GridComponent />
                 <ShapeRenderer />
               </Group>
 
               <MiniMap />
 
               <Path path={brushPath} {...brushPathProps} />
-
-              {/* <Group
-                transform={[
-                  { translateX: 100 },
-                  { translateY: 100 },
-                  { scale: 2 }
-                ]}
-              >
-                <Path path={svgPath} color='lightblue' />
-              </Group> */}
 
               {moveShape && (
                 <Group matrix={moveShapeMatrix}>

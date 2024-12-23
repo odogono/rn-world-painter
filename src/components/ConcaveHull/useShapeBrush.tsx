@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 
-import { SkPath, Skia } from '@shopify/react-native-skia';
+import { SkPath } from '@shopify/react-native-skia';
 import {
   SharedValue,
   runOnJS,
@@ -12,12 +12,7 @@ import shapes from '@assets/shapes.json';
 import { generateConcaveHull } from '@helpers/geo';
 import { createLogger } from '@helpers/log';
 import { createBrushFeature, svgPathToBrushFeature } from '@model/brushFeature';
-import {
-  ActionType,
-  BrushOperation,
-  PaintMode,
-  ShapeTemplate
-} from '@model/types';
+import { ActionType, PaintMode } from '@model/types';
 import { useStore, useStoreState } from '@model/useStore';
 import { BrushFeature, Position, Rect2, SkiaPathProps, Vector2 } from '@types';
 import { UseGestureProps } from './useGesture';
@@ -68,7 +63,7 @@ export const useShapeBrush = ({
     shapeFeature.value = svgPathToBrushFeature({
       path: shape.path,
       properties: { color: brushColorSV.value },
-      divisions: 24
+      divisions: 48
     });
   }, []);
 
