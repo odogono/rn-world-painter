@@ -8,7 +8,9 @@ import { FlowerMenuStoreProvider } from '../FlowerMenu/store/context';
 const log = createLogger('useMenu');
 
 export const useMenu = () => {
-  const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(false);
+  // const isWorldViewEnabled = useStoreState().use.panViewEnabled();
+  const setPanViewEnabled = useStoreState().use.setPanViewEnabled();
+  // const [isWorldMoveEnabled, setIsWorldMoveEnabled] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isBrushPaletteOpen, setIsBrushPaletteOpen] = useState(false);
 
@@ -25,10 +27,10 @@ export const useMenu = () => {
     log.debug('[Painter][onNodeSelect]', id);
     switch (id) {
       case 'edit':
-        setIsWorldMoveEnabled(false);
+        setPanViewEnabled(false);
         break;
       case 'pan':
-        setIsWorldMoveEnabled(true);
+        setPanViewEnabled(true);
         break;
       case 'zoomIn':
         zoomOnPoint({ zoomFactor: 4 });
@@ -82,7 +84,7 @@ export const useMenu = () => {
 
   return {
     MenuProvider,
-    isWorldMoveEnabled,
+    // isWorldMoveEnabled,
     brushOperation,
     isPaletteOpen,
     setIsPaletteOpen,

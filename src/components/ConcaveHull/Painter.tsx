@@ -64,7 +64,7 @@ export const Painter = () => {
 
   const {
     MenuProvider,
-    isWorldMoveEnabled,
+    // isWorldMoveEnabled,
     brushOperation,
     isPaletteOpen,
     setIsPaletteOpen,
@@ -74,6 +74,7 @@ export const Painter = () => {
 
   const setViewLayout = useStoreSetViewLayout();
   const viewLayout = useStoreViewLayout();
+  const isPanViewEnabled = useStoreState().use.isPanViewEnabled();
 
   const resetFeatures = useStoreState().use.resetFeatures();
   const applyAction = useStoreState().use.applyAction();
@@ -101,13 +102,13 @@ export const Painter = () => {
 
   const gestureHandlers = isMoveShapeEnabled
     ? moveHandlers
-    : isWorldMoveEnabled
+    : isPanViewEnabled
       ? moveViewHandlers
       : shapeHandlers;
 
   const handleTap = useStoreState().use.handleTap();
   const pan = useGesture({
-    isWorldMoveEnabled,
+    isPanViewEnabled,
     onTap: handleTap,
     ...gestureHandlers
   });
@@ -241,8 +242,8 @@ export const Painter = () => {
 
         <FlowerMenu
           viewLayout={viewLayout}
-          editNodeIsActive={!isWorldMoveEnabled}
-          panNodeIsActive={isWorldMoveEnabled}
+          editNodeIsActive={!isPanViewEnabled}
+          panNodeIsActive={isPanViewEnabled}
           brushOperationAddNodeIsActive={brushOperation === BrushOperation.ADD}
           brushOperationRemoveNodeIsActive={
             brushOperation === BrushOperation.SUBTRACT

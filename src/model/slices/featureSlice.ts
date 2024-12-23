@@ -28,6 +28,7 @@ export type FeatureSliceProps = {
   brushSize: number;
   brushShape: ShapeTemplate;
   brushMode: PaintMode;
+  isPanViewEnabled: boolean;
 };
 
 const defaultState: FeatureSliceProps = {
@@ -40,7 +41,8 @@ const defaultState: FeatureSliceProps = {
   brushColor: '#0061fd',
   brushSize: 10,
   brushShape: 'circle',
-  brushMode: PaintMode.PAINT
+  brushMode: PaintMode.PAINT,
+  isPanViewEnabled: true
 };
 
 export type FeatureSliceActions = {
@@ -51,6 +53,7 @@ export type FeatureSliceActions = {
   setBrushShape: (shape: ShapeTemplate) => void;
   setBrushSize: (size: number) => void;
   setBrushMode: (mode: PaintMode) => void;
+  setPanViewEnabled: (enabled: boolean) => void;
   applyAction: (action: Action) => void;
   // addFeature: (feature: BrushFeature, options?: AddFeatureOptions) => void;
   removeFeature: (feature: BrushFeature) => void;
@@ -86,6 +89,9 @@ export const createFeatureSlice: StateCreator<
   FeatureSlice
 > = (set, get) => ({
   ...defaultState,
+
+  setPanViewEnabled: (enabled: boolean) =>
+    set((state) => ({ ...state, isPanViewEnabled: enabled })),
 
   setBrushOperation: (brushOperation: BrushOperation) =>
     set((state) => ({ ...state, brushOperation })),
